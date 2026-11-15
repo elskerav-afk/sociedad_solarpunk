@@ -1,7 +1,6 @@
 
 #include "sociedad.h"
 #include "listas.h"
-#include "archivos.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
