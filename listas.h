@@ -26,5 +26,6 @@ void imprimir_lista(const Lista *lista);
 
 // libera la memoria que se usó para guardar los nodos y sus nombres
 void liberar_lista(Lista *lista);
-
+// lee un archivo y guarda sus nombres en una lista
+int cargar_archivo(const char *nombre_archivo, Lista *lista);
 #endif

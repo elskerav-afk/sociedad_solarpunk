@@ -23,6 +23,31 @@ struct Existencia {
     struct Existencia *siguiente;
 };
 
+struct Comuna; // declaración adelantada: Persona apunta a una Comuna que se define después
+
+// un servicio que sabe hacer una persona
+struct ServicioPersona {
+    char *nombre;
+    struct ServicioPersona *siguiente;
+};
+
+// un libro que la persona ya leyó (sin repetidos)
+struct LibroLeido {
+    char *nombreArchivo;
+    struct LibroLeido *siguiente;
+};
+
+// una persona de la sociedad
+struct Persona {
+    char *nombre;
+    struct Comuna *comunaActual;           // solo referencia, NO se libera desde aquí
+    struct LibroLeido *librosLeidos;
+    struct ServicioPersona *servicios;     // puede ser NULL
+    int regalosDados;
+    int regalosRecibidos;
+    struct Persona *siguiente;
+};
+
 // representa una comuna dentro de la sociedad
 struct Comuna {
     char *nombre;
@@ -48,7 +73,7 @@ struct Sociedad {
     int dia;
     int diasParaEmergencia;
 
-    struct NodoNombre *personas;
+    struct Persona *personas;
     struct NodoNombre *catalogoServicios;
     struct NodoNombreDoble *catalogoBienes;
     struct NodoNombreDoble *nombresComunas;
@@ -70,4 +95,6 @@ void liberar_sociedad(struct Sociedad *sociedad);
 void calcular_indices_comuna(struct Comuna *comuna);
 // calcula los indices de todas las comunas de la sociedad
 void calcular_indices_sociedad(struct Sociedad *sociedad);
+// agrega un servicio a una persona (devuelve 0 si ya lo sabia o fallo)
+int persona_aprender_servicio(struct Persona *p, const char *servicio);
 #endif

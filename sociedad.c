@@ -1,7 +1,6 @@
 
 #include "sociedad.h"
 #include "listas.h"
-#include "archivos.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -20,33 +19,69 @@ char *copiar_texto(const char *texto) {
 
 // agrega una persona a la lista
 int agregar_persona(struct Sociedad *sociedad, const char *nombre) {
-    struct NodoNombre *nuevo = malloc(sizeof(struct NodoNombre));
+    struct Persona *nueva = malloc(sizeof(struct Persona));
+
+    if (nueva == NULL) {
+        return 0;
+    }
+
+    nueva->nombre = copiar_texto(nombre);
+
+    if (nueva->nombre == NULL) {
+        free(nueva);
+        return 0;
+    }
+
+    nueva->comunaActual = NULL;
+    nueva->librosLeidos = NULL;
+    nueva->servicios = NULL;
+    nueva->regalosDados = 0;
+    nueva->regalosRecibidos = 0;
+    nueva->siguiente = NULL;
+
+    if (sociedad->personas == NULL) {
+        sociedad->personas = nueva;
+    } else {
+        struct Persona *actual = sociedad->personas;
+
+        while (actual->siguiente != NULL) {
+            actual = actual->siguiente;
+        }
+
+        actual->siguiente = nueva;
+    }
+
+    return 1;
+}
+
+int persona_aprender_servicio(struct Persona *p, const char *servicio) {
+    struct ServicioPersona *actual = p->servicios;
+    struct ServicioPersona *nuevo;
+
+    // si ya lo sabe, no lo repetimos
+    while (actual != NULL) {
+        if (strcmp(actual->nombre, servicio) == 0) {
+            return 0;
+        }
+        actual = actual->siguiente;
+    }
+
+    nuevo = malloc(sizeof(struct ServicioPersona));
 
     if (nuevo == NULL) {
         return 0;
     }
 
-    nuevo->nombre = copiar_texto(nombre);
+    nuevo->nombre = copiar_texto(servicio);
 
     if (nuevo->nombre == NULL) {
         free(nuevo);
         return 0;
     }
 
-    nuevo->siguiente = NULL;
-
-    if (sociedad->personas == NULL) {
-        sociedad->personas = nuevo;
-    } else {
-        struct NodoNombre *actual = sociedad->personas;
-
-        while (actual->siguiente != NULL) {
-            actual = actual->siguiente;
-        }
-
-        actual->siguiente = nuevo;
-    }
-
+    // se inserta al inicio, es lo mas simple
+    nuevo->siguiente = p->servicios;
+    p->servicios = nuevo;
     return 1;
 }
 
@@ -573,6 +608,7 @@ int inicializar_sociedad(struct Sociedad *sociedad,
     int poblacionBase = sociedad->poblacionTotal / comunasActivas;
     int personasExtra = sociedad->poblacionTotal % comunasActivas;
     int numeroComuna = 0;
+    struct Persona *personaAsignar = sociedad->personas;
 
     while (comunaActual != NULL) {
         comunaActual->poblacion = poblacionBase;
@@ -580,6 +616,12 @@ int inicializar_sociedad(struct Sociedad *sociedad,
         if (numeroComuna < personasExtra) {
             comunaActual->poblacion++;
         }
+        
+        // asigna a esta comuna las siguientes personas de la lista
+		for (int i = 0; i < comunaActual->poblacion; i++) {
+		personaAsignar->comunaActual = comunaActual;
+		personaAsignar = personaAsignar->siguiente;
+		}
 
         if (!crear_existencias_comuna(sociedad, comunaActual)) {
             liberar_lista(&personas);
@@ -602,7 +644,36 @@ int inicializar_sociedad(struct Sociedad *sociedad,
     liberar_lista(&comunas);
     liberar_lista(&bienes);
     liberar_lista(&servicios);
+	// asigna servicios iniciales a las personas (0, 1 o 2)
+struct Persona *personaServ = sociedad->personas;
 
+while (personaServ != NULL) {
+    int cantidadServicios = rand() % 3;
+
+    for (int k = 0; k < cantidadServicios; k++) {
+        struct NodoNombre *servicio = sociedad->catalogoServicios;
+        int posicion = rand() % sociedad->cantidadServiciosActivos;
+
+        for (int j = 0; j < posicion; j++) {
+            servicio = servicio->siguiente;
+        }
+
+        persona_aprender_servicio(personaServ, servicio->nombre);
+    }
+
+    personaServ = personaServ->siguiente;
+}
+struct Persona *p = sociedad->personas;
+while (p != NULL) {
+    printf("%s -> %s |", p->nombre, p->comunaActual->nombre);
+    struct ServicioPersona *s = p->servicios;
+    while (s != NULL) {
+        printf(" %s,", s->nombre);
+        s = s->siguiente;
+    }
+    printf("\n");
+    p = p->siguiente;
+}
     return 1;
 }
 
@@ -626,13 +697,21 @@ void liberar_sociedad(struct Sociedad *sociedad) {
     struct NodoNombreDoble *bien;
     struct NodoNombreDoble *nombreComuna;
     struct Comuna *comuna;
+    struct Persona *personaActual;
 
     while (sociedad->personas != NULL) {
-        persona = sociedad->personas;
-        sociedad->personas = persona->siguiente;
-
-        free(persona->nombre);
-        free(persona);
+        personaActual = sociedad->personas;
+        sociedad->personas = personaActual->siguiente;
+		
+		while (personaActual->servicios != NULL) {
+			struct ServicioPersona *serv = personaActual->servicios;
+			personaActual->servicios = serv->siguiente;
+			free(serv->nombre);
+			free(serv);
+		}
+		
+        free(personaActual->nombre);
+        free(personaActual);
     }
 
     while (sociedad->catalogoServicios != NULL) {
