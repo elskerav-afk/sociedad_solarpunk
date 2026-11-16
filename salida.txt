@@ -1,0 +1,891 @@
+
+[36m[1m========================================
+  SIMULACION DE LA SOCIEDAD SOLARPUNK
+========================================
+[0m[33m[1m
+     AUTORIDAD SUPREMA, TENGANOS PIEDAD
+
+[0mIniciando la sociedad...
+Cantidad de comunas activas (3-50): Cantidad de bienes activos (1-30): Cantidad de servicios activos (1-30): Ruta de la carpeta del corpus: [32m
+[+] La sociedad se inicializo correctamente.
+[0m
+[36m[1m========================================
+  ESTADO DE LAS COMUNAS
+========================================
+[0mComuna                  Poblacion    Necesidad   Satisfaccion
+--------------------------------------------------------------
+Santiago                      100 [32m       20.00 [0m[32m         83.00
+[0mProvidencia                   100 [32m       20.00 [0m[32m         83.00
+[0mLas Condes                    100 [32m       20.00 [0m[32m         83.00
+[0mÑuñoa                       100 [32m       20.00 [0m[32m         83.00
+[0mLa Florida                    100 [32m       20.00 [0m[32m         83.00
+[0m
+[36m[1m========================================
+  NUEVO DIA DE SIMULACION
+========================================
+[0m[1mDIA 1 DE 15
+[0m
+[36m[1m========================================
+  MENU DE PERSONAS
+========================================
+[0m1. Ver las personas de una comuna
+2. Regalar un bien
+3. Leer un libro (prueba)
+0. Continuar
+
+Opcion: 
+Numero de la persona que lee: Texto a buscar: 
+--- Busqueda de texto en Biblioteca (Santiago): "un lugar" ---
+[CACHE MISS] Buscando "un lugar" en 4 libros en disco...
+
+Resultados para "un lugar" (3 libro(s) encontrado(s)):
+  [1] cuento.txt
+  [2] dos_ciudades.txt
+  [3] quijote.txt
+
+[1mLibros encontrados (3):
+[0m  1. cuento.txt
+  2. dos_ciudades.txt
+  3. quijote.txt
+
+Libro que lee (0 para ninguno): Daniela Fallas Campos ha leido 1 libro(s) distinto(s).
+
+[36m[1m========================================
+  MENU DE PERSONAS
+========================================
+[0m1. Ver las personas de una comuna
+2. Regalar un bien
+3. Leer un libro (prueba)
+0. Continuar
+
+Opcion: 
+Numero de la persona que lee: Texto a buscar: 
+--- Busqueda de texto en Biblioteca (Santiago): "un lugar" ---
+[CACHE HIT] Resultado recuperado desde el Arbol Chaflaneado (accesos: 2).
+
+Resultados para "un lugar" (3 libro(s) encontrado(s)):
+  [1] cuento.txt
+  [2] dos_ciudades.txt
+  [3] quijote.txt
+
+[1mLibros encontrados (3):
+[0m  1. cuento.txt
+  2. dos_ciudades.txt
+  3. quijote.txt
+
+Libro que lee (0 para ninguno): Daniela Fallas Campos ha leido 2 libro(s) distinto(s).
+
+[36m[1m========================================
+  MENU DE PERSONAS
+========================================
+[0m1. Ver las personas de una comuna
+2. Regalar un bien
+3. Leer un libro (prueba)
+0. Continuar
+
+Opcion: 
+Numero de la persona que lee: Texto a buscar: 
+--- Busqueda de texto en Biblioteca (Santiago): "un lugar" ---
+[CACHE HIT] Resultado recuperado desde el Arbol Chaflaneado (accesos: 3).
+
+Resultados para "un lugar" (3 libro(s) encontrado(s)):
+  [1] cuento.txt
+  [2] dos_ciudades.txt
+  [3] quijote.txt
+
+[1mLibros encontrados (3):
+[0m  1. cuento.txt
+  2. dos_ciudades.txt
+  3. quijote.txt
+
+Libro que lee (0 para ninguno): Daniela Fallas Campos ha leido 3 libro(s) distinto(s).
+
+[1mYa puede aprender un servicio:
+[0m  1. Corte de cabello
+  2. Clases de inglés
+  3. Reparación de computadoras
+
+Servicio que aprende: [31m
+[!] No pudo aprenderlo (quizas ya lo sabia).
+[0m
+[36m[1m========================================
+  MENU DE PERSONAS
+========================================
+[0m1. Ver las personas de una comuna
+2. Regalar un bien
+3. Leer un libro (prueba)
+0. Continuar
+
+Opcion: 
+[36m[1m========================================
+  MENU DE BIBLIOTECA
+========================================
+[0m1. Ver catalogo de libros (primeros 20)
+2. Buscar un libro por nombre exacto
+3. Ver el estado de la cache de una comuna
+0. Continuar
+
+Opcion: 
+[1mCOMUNAS DISPONIBLES
+[0m  1. Santiago
+  2. Providencia
+  3. Las Condes
+  4. Ñuñoa
+  5. La Florida
+
+Numero de la comuna: 
+Biblioteca: Santiago | Libros indexados (AVL): 4 (altura: 3) | Hits: 2 | Misses: 1
+
+=== Estado del Arbol Chaflaneado (Cache de Busquedas) ===
+Total de terminos en cache: 1
+
+|-- "un lugar" (libros: 3, accesos: 3)  <-- [RAIZ]
+=========================================================
+
+[36m[1m========================================
+  MENU DE BIBLIOTECA
+========================================
+[0m1. Ver catalogo de libros (primeros 20)
+2. Buscar un libro por nombre exacto
+3. Ver el estado de la cache de una comuna
+0. Continuar
+
+Opcion: 
+[36m[1m========================================
+  MENU DE TRUEQUE
+========================================
+[0m1. Intercambiar bienes
+2. Intercambiar servicios
+0. Continuar sin intercambiar
+
+Opcion: [33m
+Se continua sin realizar trueques.
+[0m
+[36mEstado al finalizar el dia 1:
+[0m
+[36m[1m========================================
+  ESTADO DE LAS COMUNAS
+========================================
+[0mComuna                  Poblacion    Necesidad   Satisfaccion
+--------------------------------------------------------------
+Santiago                      100 [32m       21.05 [0m[32m         82.15
+[0mProvidencia                   100 [32m       20.62 [0m[32m         82.39
+[0mLas Condes                    100 [32m       21.14 [0m[32m         82.11
+[0mÑuñoa                       100 [32m       20.71 [0m[32m         82.35
+[0mLa Florida                    100 [32m       20.90 [0m[32m         82.23
+[0m
+[36m[1m========================================
+  NUEVO DIA DE SIMULACION
+========================================
+[0m[1mDIA 2 DE 15
+[0m
+[36m[1m========================================
+  MENU DE PERSONAS
+========================================
+[0m1. Ver las personas de una comuna
+2. Regalar un bien
+3. Leer un libro (prueba)
+0. Continuar
+
+Opcion: 
+[36m[1m========================================
+  MENU DE BIBLIOTECA
+========================================
+[0m1. Ver catalogo de libros (primeros 20)
+2. Buscar un libro por nombre exacto
+3. Ver el estado de la cache de una comuna
+0. Continuar
+
+Opcion: 
+[36m[1m========================================
+  MENU DE TRUEQUE
+========================================
+[0m1. Intercambiar bienes
+2. Intercambiar servicios
+0. Continuar sin intercambiar
+
+Opcion: [33m
+Se continua sin realizar trueques.
+[0m
+[36mEstado al finalizar el dia 2:
+[0m
+[36m[1m========================================
+  ESTADO DE LAS COMUNAS
+========================================
+[0mComuna                  Poblacion    Necesidad   Satisfaccion
+--------------------------------------------------------------
+Santiago                      100 [32m       22.14 [0m[32m         81.27
+[0mProvidencia                   100 [32m       21.57 [0m[32m         81.57
+[0mLas Condes                    100 [32m       22.00 [0m[32m         81.34
+[0mÑuñoa                       100 [32m       21.71 [0m[32m         81.52
+[0mLa Florida                    100 [32m       21.86 [0m[32m         81.42
+[0m
+[36m[1m========================================
+  NUEVO DIA DE SIMULACION
+========================================
+[0m[1mDIA 3 DE 15
+[0m
+[36m[1m========================================
+  MENU DE PERSONAS
+========================================
+[0m1. Ver las personas de una comuna
+2. Regalar un bien
+3. Leer un libro (prueba)
+0. Continuar
+
+Opcion: 
+[36m[1m========================================
+  MENU DE BIBLIOTECA
+========================================
+[0m1. Ver catalogo de libros (primeros 20)
+2. Buscar un libro por nombre exacto
+3. Ver el estado de la cache de una comuna
+0. Continuar
+
+Opcion: 
+[36m[1m========================================
+  MENU DE TRUEQUE
+========================================
+[0m1. Intercambiar bienes
+2. Intercambiar servicios
+0. Continuar sin intercambiar
+
+Opcion: [33m
+Se continua sin realizar trueques.
+[0m
+[36mEstado al finalizar el dia 3:
+[0m
+[36m[1m========================================
+  ESTADO DE LAS COMUNAS
+========================================
+[0mComuna                  Poblacion    Necesidad   Satisfaccion
+--------------------------------------------------------------
+Santiago                      100 [32m       22.81 [0m[32m         80.65
+[0mProvidencia                   100 [32m       22.71 [0m[32m         80.71
+[0mLas Condes                    100 [32m       22.62 [0m[32m         80.77
+[0mÑuñoa                       100 [32m       22.48 [0m[32m         80.86
+[0mLa Florida                    100 [32m       22.57 [0m[32m         80.82
+[0m
+[36m[1m========================================
+  NUEVO DIA DE SIMULACION
+========================================
+[0m[1mDIA 4 DE 15
+[0m
+[36m[1m========================================
+  MENU DE PERSONAS
+========================================
+[0m1. Ver las personas de una comuna
+2. Regalar un bien
+3. Leer un libro (prueba)
+0. Continuar
+
+Opcion: 
+[36m[1m========================================
+  MENU DE BIBLIOTECA
+========================================
+[0m1. Ver catalogo de libros (primeros 20)
+2. Buscar un libro por nombre exacto
+3. Ver el estado de la cache de una comuna
+0. Continuar
+
+Opcion: 
+[36m[1m========================================
+  MENU DE TRUEQUE
+========================================
+[0m1. Intercambiar bienes
+2. Intercambiar servicios
+0. Continuar sin intercambiar
+
+Opcion: [33m
+Se continua sin realizar trueques.
+[0m
+[36mEstado al finalizar el dia 4:
+[0m
+[36m[1m========================================
+  ESTADO DE LAS COMUNAS
+========================================
+[0mComuna                  Poblacion    Necesidad   Satisfaccion
+--------------------------------------------------------------
+Santiago                      100 [32m       23.71 [0m[32m         79.87
+[0mProvidencia                   100 [32m       23.62 [0m[32m         79.95
+[0mLas Condes                    100 [32m       23.57 [0m[32m         79.96
+[0mÑuñoa                       100 [32m       23.24 [0m[32m         80.14
+[0mLa Florida                    100 [32m       23.86 [0m[32m         79.83
+[0m
+[36m[1m========================================
+  NUEVO DIA DE SIMULACION
+========================================
+[0m[1mDIA 5 DE 15
+[0m
+[36m[1m========================================
+  MENU DE PERSONAS
+========================================
+[0m1. Ver las personas de una comuna
+2. Regalar un bien
+3. Leer un libro (prueba)
+0. Continuar
+
+Opcion: 
+[36m[1m========================================
+  MENU DE BIBLIOTECA
+========================================
+[0m1. Ver catalogo de libros (primeros 20)
+2. Buscar un libro por nombre exacto
+3. Ver el estado de la cache de una comuna
+0. Continuar
+
+Opcion: 
+[36m[1m========================================
+  MENU DE TRUEQUE
+========================================
+[0m1. Intercambiar bienes
+2. Intercambiar servicios
+0. Continuar sin intercambiar
+
+Opcion: [33m
+Se continua sin realizar trueques.
+[0m
+[36mEstado al finalizar el dia 5:
+[0m
+[36m[1m========================================
+  ESTADO DE LAS COMUNAS
+========================================
+[0mComuna                  Poblacion    Necesidad   Satisfaccion
+--------------------------------------------------------------
+Santiago                      100 [32m       24.81 [0m[32m         78.95
+[0mProvidencia                   100 [32m       24.90 [0m[32m         78.94
+[0mLas Condes                    100 [32m       24.38 [0m[32m         79.21
+[0mÑuñoa                       100 [32m       24.19 [0m[32m         79.32
+[0mLa Florida                    100 [32m       24.67 [0m[32m         79.13
+[0m
+[36m[1m========================================
+  NUEVO DIA DE SIMULACION
+========================================
+[0m[1mDIA 6 DE 15
+[0m
+[36m[1m========================================
+  MENU DE PERSONAS
+========================================
+[0m1. Ver las personas de una comuna
+2. Regalar un bien
+3. Leer un libro (prueba)
+0. Continuar
+
+Opcion: 
+[36m[1m========================================
+  MENU DE BIBLIOTECA
+========================================
+[0m1. Ver catalogo de libros (primeros 20)
+2. Buscar un libro por nombre exacto
+3. Ver el estado de la cache de una comuna
+0. Continuar
+
+Opcion: 
+[36m[1m========================================
+  MENU DE TRUEQUE
+========================================
+[0m1. Intercambiar bienes
+2. Intercambiar servicios
+0. Continuar sin intercambiar
+
+Opcion: [33m
+Se continua sin realizar trueques.
+[0m
+[33m[1m==================================================
+                 ALERTA DEL SISTEMA
+==================================================
+[0m[31m[1m
+  ¡EMERGENCIA EN LA COMUNA Las Condes!
+[0m
+Se ha registrado una emergencia que afecta a esta comuna.
+Se aplicaran perdidas en sus bienes y servicios.
+
+[36m[1m  PERDIDAS DE BIENES
+[0m  ------------------------------------------------
+  - Computadora portátil          [31m-95 unidades
+[0m  - Teléfono celular              [31m-94 unidades
+[0m  - Televisor                      [31m-96 unidades
+[0m
+[36m[1m  PERDIDAS DE SERVICIOS
+[0m  ------------------------------------------------
+  - Corte de cabello               [31m-34 unidades
+[0m  - Clases de inglés              [31m-35 unidades
+[0m  - Reparación de computadoras    [31m-35 unidades
+[0m[33m  [!] La comuna Providencia tambien fue afectada.
+[0m[33m  [!] La comuna Ñuñoa tambien fue afectada.
+[0m[33m  [!] La comuna La Florida tambien fue afectada.
+[0m
+[33m[1m  La emergencia tambien puede afectar a las comunas cercanas.
+==================================================
+[0m
+[36mEstado al finalizar el dia 6:
+[0m
+[36m[1m========================================
+  ESTADO DE LAS COMUNAS
+========================================
+[0mComuna                  Poblacion    Necesidad   Satisfaccion
+--------------------------------------------------------------
+Santiago                      100 [32m       25.62 [0m[32m         72.19
+[0mProvidencia                   100 [32m       25.62 [0m[33m         68.24
+[0mLas Condes                    100 [33m       43.86 [0m[33m         53.44
+[0mÑuñoa                       100 [32m       25.19 [0m[33m         67.64
+[0mLa Florida                    100 [32m       25.52 [0m[33m         66.30
+[0m
+[36m[1m========================================
+  NUEVO DIA DE SIMULACION
+========================================
+[0m[1mDIA 7 DE 15
+[0m
+[36m[1m========================================
+  MENU DE PERSONAS
+========================================
+[0m1. Ver las personas de una comuna
+2. Regalar un bien
+3. Leer un libro (prueba)
+0. Continuar
+
+Opcion: 
+[36m[1m========================================
+  MENU DE BIBLIOTECA
+========================================
+[0m1. Ver catalogo de libros (primeros 20)
+2. Buscar un libro por nombre exacto
+3. Ver el estado de la cache de una comuna
+0. Continuar
+
+Opcion: 
+[36m[1m========================================
+  MENU DE TRUEQUE
+========================================
+[0m1. Intercambiar bienes
+2. Intercambiar servicios
+0. Continuar sin intercambiar
+
+Opcion: [33m
+Se continua sin realizar trueques.
+[0m
+[36mEstado al finalizar el dia 7:
+[0m
+[36m[1m========================================
+  ESTADO DE LAS COMUNAS
+========================================
+[0mComuna                  Poblacion    Necesidad   Satisfaccion
+--------------------------------------------------------------
+Santiago                      100 [32m       26.48 [0m[32m         71.99
+[0mProvidencia                   100 [32m       26.38 [0m[33m         69.15
+[0mLas Condes                    100 [33m       44.62 [0m[33m         54.37
+[0mÑuñoa                       100 [32m       25.62 [0m[33m         68.87
+[0mLa Florida                    100 [32m       26.52 [0m[33m         67.26
+[0m
+[36m[1m========================================
+  NUEVO DIA DE SIMULACION
+========================================
+[0m[1mDIA 8 DE 15
+[0m
+[36m[1m========================================
+  MENU DE PERSONAS
+========================================
+[0m1. Ver las personas de una comuna
+2. Regalar un bien
+3. Leer un libro (prueba)
+0. Continuar
+
+Opcion: 
+[36m[1m========================================
+  MENU DE BIBLIOTECA
+========================================
+[0m1. Ver catalogo de libros (primeros 20)
+2. Buscar un libro por nombre exacto
+3. Ver el estado de la cache de una comuna
+0. Continuar
+
+Opcion: 
+[36m[1m========================================
+  MENU DE TRUEQUE
+========================================
+[0m1. Intercambiar bienes
+2. Intercambiar servicios
+0. Continuar sin intercambiar
+
+Opcion: [33m
+Se continua sin realizar trueques.
+[0mLa comuna Las Condes se disuelve. Sus personas se mudan a Santiago.
+La comuna Ñuñoa pasa a ser administrada.
+
+[36mEstado al finalizar el dia 8:
+[0m
+[36m[1m========================================
+  ESTADO DE LAS COMUNAS
+========================================
+[0mComuna                  Poblacion    Necesidad   Satisfaccion
+--------------------------------------------------------------
+Santiago                      200 [32m       25.47 [0m[32m         76.50
+[0mProvidencia                   100 [32m       27.29 [0m[32m         72.42
+[0mÑuñoa                       100 [32m       26.48 [0m[32m         72.84
+[0mLa Florida                    100 [32m       27.33 [0m[32m         71.78
+[0m
+[36m[1m========================================
+  NUEVO DIA DE SIMULACION
+========================================
+[0m[1mDIA 9 DE 15
+[0m
+[36m[1m========================================
+  MENU DE PERSONAS
+========================================
+[0m1. Ver las personas de una comuna
+2. Regalar un bien
+3. Leer un libro (prueba)
+0. Continuar
+
+Opcion: 
+[36m[1m========================================
+  MENU DE BIBLIOTECA
+========================================
+[0m1. Ver catalogo de libros (primeros 20)
+2. Buscar un libro por nombre exacto
+3. Ver el estado de la cache de una comuna
+0. Continuar
+
+Opcion: 
+[36m[1m========================================
+  MENU DE TRUEQUE
+========================================
+[0m1. Intercambiar bienes
+2. Intercambiar servicios
+0. Continuar sin intercambiar
+
+Opcion: [33m
+Se continua sin realizar trueques.
+[0m
+[33m[1m==================================================
+                 ALERTA DEL SISTEMA
+==================================================
+[0m[31m[1m
+  ¡EMERGENCIA EN LA COMUNA Santiago!
+[0m
+Se ha registrado una emergencia que afecta a esta comuna.
+Se aplicaran perdidas en sus bienes y servicios.
+
+[36m[1m  PERDIDAS DE BIENES
+[0m  ------------------------------------------------
+  - Computadora portátil          [31m-91 unidades
+[0m  - Teléfono celular              [31m-94 unidades
+[0m  - Televisor                      [31m-93 unidades
+[0m
+[36m[1m  PERDIDAS DE SERVICIOS
+[0m  ------------------------------------------------
+  - Corte de cabello               [31m-45 unidades
+[0m  - Clases de inglés              [31m-48 unidades
+[0m  - Reparación de computadoras    [31m-41 unidades
+[0m[33m  [!] La comuna Providencia tambien fue afectada.
+[0m[33m  [!] La comuna Ñuñoa tambien fue afectada.
+[0m
+[33m[1m  La emergencia tambien puede afectar a las comunas cercanas.
+==================================================
+[0m
+[36mEstado al finalizar el dia 9:
+[0m
+[36m[1m========================================
+  ESTADO DE LAS COMUNAS
+========================================
+[0mComuna                  Poblacion    Necesidad   Satisfaccion
+--------------------------------------------------------------
+Santiago                      200 [33m       44.65 [0m[33m         50.81
+[0mProvidencia                   100 [32m       28.05 [0m[33m         63.28
+[0mÑuñoa                       100 [32m       27.14 [0m[33m         63.75
+[0mLa Florida                    100 [32m       28.10 [0m[32m         70.34
+[0m
+[36m[1m========================================
+  NUEVO DIA DE SIMULACION
+========================================
+[0m[1mDIA 10 DE 15
+[0m
+[36m[1m========================================
+  MENU DE PERSONAS
+========================================
+[0m1. Ver las personas de una comuna
+2. Regalar un bien
+3. Leer un libro (prueba)
+0. Continuar
+
+Opcion: 
+[36m[1m========================================
+  MENU DE BIBLIOTECA
+========================================
+[0m1. Ver catalogo de libros (primeros 20)
+2. Buscar un libro por nombre exacto
+3. Ver el estado de la cache de una comuna
+0. Continuar
+
+Opcion: 
+[36m[1m========================================
+  MENU DE TRUEQUE
+========================================
+[0m1. Intercambiar bienes
+2. Intercambiar servicios
+0. Continuar sin intercambiar
+
+Opcion: [33m
+Se continua sin realizar trueques.
+[0mLa comuna Santiago se disuelve. Sus personas se mudan a La Florida.
+La comuna La Florida pasa a ser administrada.
+
+[36mEstado al finalizar el dia 10:
+[0m
+[36m[1m========================================
+  ESTADO DE LAS COMUNAS
+========================================
+[0mComuna                  Poblacion    Necesidad   Satisfaccion
+--------------------------------------------------------------
+Providencia                   100 [32m       28.71 [0m[33m         67.22
+[0mÑuñoa                       100 [32m       27.86 [0m[33m         67.62
+[0mLa Florida                    300 [32m       24.98 [0m[32m         73.74
+[0m
+[36m[1m========================================
+  NUEVO DIA DE SIMULACION
+========================================
+[0m[1mDIA 11 DE 15
+[0m
+[36m[1m========================================
+  MENU DE PERSONAS
+========================================
+[0m1. Ver las personas de una comuna
+2. Regalar un bien
+3. Leer un libro (prueba)
+0. Continuar
+
+Opcion: 
+[36m[1m========================================
+  MENU DE BIBLIOTECA
+========================================
+[0m1. Ver catalogo de libros (primeros 20)
+2. Buscar un libro por nombre exacto
+3. Ver el estado de la cache de una comuna
+0. Continuar
+
+Opcion: 
+[36m[1m========================================
+  MENU DE TRUEQUE
+========================================
+[0m1. Intercambiar bienes
+2. Intercambiar servicios
+0. Continuar sin intercambiar
+
+Opcion: [33m
+Se continua sin realizar trueques.
+[0m
+[36mEstado al finalizar el dia 11:
+[0m
+[36m[1m========================================
+  ESTADO DE LAS COMUNAS
+========================================
+[0mComuna                  Poblacion    Necesidad   Satisfaccion
+--------------------------------------------------------------
+Providencia                   100 [32m       29.52 [0m[33m         68.20
+[0mÑuñoa                       100 [32m       28.90 [0m[33m         68.49
+[0mLa Florida                    300 [32m       25.81 [0m[32m         74.71
+[0m
+[36m[1m========================================
+  NUEVO DIA DE SIMULACION
+========================================
+[0m[1mDIA 12 DE 15
+[0m
+[36m[1m========================================
+  MENU DE PERSONAS
+========================================
+[0m1. Ver las personas de una comuna
+2. Regalar un bien
+3. Leer un libro (prueba)
+0. Continuar
+
+Opcion: 
+[36m[1m========================================
+  MENU DE BIBLIOTECA
+========================================
+[0m1. Ver catalogo de libros (primeros 20)
+2. Buscar un libro por nombre exacto
+3. Ver el estado de la cache de una comuna
+0. Continuar
+
+Opcion: 
+[36m[1m========================================
+  MENU DE TRUEQUE
+========================================
+[0m1. Intercambiar bienes
+2. Intercambiar servicios
+0. Continuar sin intercambiar
+
+Opcion: [33m
+Se continua sin realizar trueques.
+[0m
+[36mEstado al finalizar el dia 12:
+[0m
+[36m[1m========================================
+  ESTADO DE LAS COMUNAS
+========================================
+[0mComuna                  Poblacion    Necesidad   Satisfaccion
+--------------------------------------------------------------
+Providencia                   100 [32m       30.33 [0m[33m         68.96
+[0mÑuñoa                       100 [32m       29.76 [0m[33m         69.24
+[0mLa Florida                    300 [32m       26.52 [0m[32m         74.58
+[0m
+[36m[1m========================================
+  NUEVO DIA DE SIMULACION
+========================================
+[0m[1mDIA 13 DE 15
+[0m
+[36m[1m========================================
+  MENU DE PERSONAS
+========================================
+[0m1. Ver las personas de una comuna
+2. Regalar un bien
+3. Leer un libro (prueba)
+0. Continuar
+
+Opcion: 
+[36m[1m========================================
+  MENU DE BIBLIOTECA
+========================================
+[0m1. Ver catalogo de libros (primeros 20)
+2. Buscar un libro por nombre exacto
+3. Ver el estado de la cache de una comuna
+0. Continuar
+
+Opcion: 
+[36m[1m========================================
+  MENU DE TRUEQUE
+========================================
+[0m1. Intercambiar bienes
+2. Intercambiar servicios
+0. Continuar sin intercambiar
+
+Opcion: [33m
+Se continua sin realizar trueques.
+[0m
+[36mEstado al finalizar el dia 13:
+[0m
+[36m[1m========================================
+  ESTADO DE LAS COMUNAS
+========================================
+[0mComuna                  Poblacion    Necesidad   Satisfaccion
+--------------------------------------------------------------
+Providencia                   100 [32m       31.19 [0m[33m         69.73
+[0mÑuñoa                       100 [32m       30.43 [0m[32m         70.09
+[0mLa Florida                    300 [32m       27.23 [0m[32m         74.46
+[0m
+[36m[1m========================================
+  NUEVO DIA DE SIMULACION
+========================================
+[0m[1mDIA 14 DE 15
+[0m
+[36m[1m========================================
+  MENU DE PERSONAS
+========================================
+[0m1. Ver las personas de una comuna
+2. Regalar un bien
+3. Leer un libro (prueba)
+0. Continuar
+
+Opcion: 
+[36m[1m========================================
+  MENU DE BIBLIOTECA
+========================================
+[0m1. Ver catalogo de libros (primeros 20)
+2. Buscar un libro por nombre exacto
+3. Ver el estado de la cache de una comuna
+0. Continuar
+
+Opcion: 
+[36m[1m========================================
+  MENU DE TRUEQUE
+========================================
+[0m1. Intercambiar bienes
+2. Intercambiar servicios
+0. Continuar sin intercambiar
+
+Opcion: [33m
+Se continua sin realizar trueques.
+[0m
+[36mEstado al finalizar el dia 14:
+[0m
+[36m[1m========================================
+  ESTADO DE LAS COMUNAS
+========================================
+[0mComuna                  Poblacion    Necesidad   Satisfaccion
+--------------------------------------------------------------
+Providencia                   100 [32m       31.95 [0m[32m         70.54
+[0mÑuñoa                       100 [32m       31.10 [0m[32m         70.95
+[0mLa Florida                    300 [32m       28.02 [0m[32m         74.31
+[0m
+[36m[1m========================================
+  NUEVO DIA DE SIMULACION
+========================================
+[0m[1mDIA 15 DE 15
+[0m
+[33m[1m==================================================
+                 ALERTA DEL SISTEMA
+==================================================
+[0m[31m[1m
+  ¡EMERGENCIA EN LA COMUNA Providencia!
+[0m
+Se ha registrado una emergencia que afecta a esta comuna.
+Se aplicaran perdidas en sus bienes y servicios.
+
+[36m[1m  PERDIDAS DE BIENES
+[0m  ------------------------------------------------
+  - Computadora portátil          [31m-89 unidades
+[0m  - Teléfono celular              [31m-87 unidades
+[0m  - Televisor                      [31m-88 unidades
+[0m
+[36m[1m  PERDIDAS DE SERVICIOS
+[0m  ------------------------------------------------
+  - Corte de cabello               [31m-28 unidades
+[0m  - Clases de inglés              [31m-30 unidades
+[0m  - Reparación de computadoras    [31m-29 unidades
+[0m[33m  [!] La comuna Ñuñoa tambien fue afectada.
+[0m[33m  [!] La comuna La Florida tambien fue afectada.
+[0m
+[33m[1m  La emergencia tambien puede afectar a las comunas cercanas.
+==================================================
+[0mLa comuna Providencia se disuelve. Sus personas se mudan a La Florida.
+[31m
+[!] FRACASO: quedan menos de 3 comunas.
+[0m
+[36mEstado al finalizar el dia 15:
+[0m
+[36m[1m========================================
+  ESTADO DE LAS COMUNAS
+========================================
+[0mComuna                  Poblacion    Necesidad   Satisfaccion
+--------------------------------------------------------------
+Ñuñoa                       100 [32m       32.14 [0m[33m         64.41
+[0mLa Florida                    400 [32m       26.43 [0m[33m         67.10
+[0m
+[36m[1m========================================
+  RESUMEN FINAL DE LA SIMULACION
+========================================
+[0mDias simulados: 15
+Poblacion total: 500
+Comunas registradas: 2
+Necesidad promedio: 29.29
+Satisfaccion promedio: 65.75
+
+[1mESTADO DE CADA COMUNA
+[0m
+Ñuñoa
+  Necesidad: 32.14
+  Satisfaccion: 64.41
+  Tipo: Administrada
+[33m  Estado: necesita mejoras
+[0m
+La Florida
+  Necesidad: 26.43
+  Satisfaccion: 67.10
+  Tipo: Administrada
+[33m  Estado: necesita mejoras
+[0m[31m
+[!] RESULTADO FINAL: FRACASO, quedaron menos de 3 comunas.
+[0m
+[32m
+[+] La simulacion ha terminado.
+[0m

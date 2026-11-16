@@ -85,6 +85,83 @@ int persona_aprender_servicio(struct Persona *p, const char *servicio) {
     return 1;
 }
 
+int registrar_libro_leido(struct Persona *p, const char *nombreArchivo) {
+    struct LibroLeido *actual = p->librosLeidos;
+    struct LibroLeido *nuevo;
+
+    // si ya lo leyo, no se repite
+    while (actual != NULL) {
+        if (strcmp(actual->nombreArchivo, nombreArchivo) == 0) {
+            return 0;
+        }
+        actual = actual->siguiente;
+    }
+
+    nuevo = malloc(sizeof(struct LibroLeido));
+
+    if (nuevo == NULL) {
+        return 0;
+    }
+
+    nuevo->nombreArchivo = copiar_texto(nombreArchivo);
+
+    if (nuevo->nombreArchivo == NULL) {
+        free(nuevo);
+        return 0;
+    }
+
+    nuevo->siguiente = p->librosLeidos;
+    p->librosLeidos = nuevo;
+    return 1;
+}
+
+int contar_libros_leidos(const struct Persona *p) {
+    const struct LibroLeido *libro = p->librosLeidos;
+    int total = 0;
+
+    while (libro != NULL) {
+        total++;
+        libro = libro->siguiente;
+    }
+
+    return total;
+}
+
+int aprender_servicio_leyendo(struct Persona *p, const char *servicio) {
+    struct Existencia *e;
+    struct LibroLeido *libro;
+
+    if (contar_libros_leidos(p) < 3) {
+        return 0;
+    }
+
+    // devuelve 0 si ya lo sabia
+    if (!persona_aprender_servicio(p, servicio)) {
+        return 0;
+    }
+
+    // el stock de ese servicio crece en su comuna
+    e = p->comunaActual->servicios;
+
+    while (e != NULL) {
+        if (strcmp(e->nombre, servicio) == 0) {
+            e->maximo += 2;
+            e->cantidad += 2;
+        }
+        e = e->siguiente;
+    }
+
+    // gasta los libros: para otro servicio necesita leer 3 nuevos
+    while (p->librosLeidos != NULL) {
+        libro = p->librosLeidos;
+        p->librosLeidos = libro->siguiente;
+        free(libro->nombreArchivo);
+        free(libro);
+    }
+
+    return 1;
+}
+
 // agrega un bien al catalogo de bienes
 int agregar_bien(struct Sociedad *sociedad, const char *nombre) {
     struct NodoNombreDoble *nuevo = malloc(sizeof(struct NodoNombreDoble));
@@ -166,12 +243,21 @@ void calcular_reciprocidad_comuna(struct Sociedad *sociedad,
         p = p->siguiente;
     }
 
-    if (dados == 0 && recibidos == 0) {
-        comuna->reciprocidad = 100;
-    } else if (dados > recibidos) {
-        comuna->reciprocidad = 100.0f * recibidos / dados;
-    } else {
-        comuna->reciprocidad = 100.0f * dados / recibidos;
+        int diferencia = dados - recibidos;
+    int limite = comuna->poblacion / 10;
+
+    if (diferencia < 0) {
+        diferencia = -diferencia;
+    }
+
+    if (limite < 1) {
+        limite = 1;
+    }
+
+    comuna->reciprocidad = 100.0f - 100.0f * diferencia / limite;
+
+    if (comuna->reciprocidad < 0) {
+        comuna->reciprocidad = 0;
     }
 }
 
@@ -203,6 +289,7 @@ int agregar_comuna(struct Sociedad *sociedad, const char *nombre) {
     nueva->administrada = 0;
     nueva->anterior = NULL;
     nueva->siguiente = NULL;
+    nueva->biblioteca = NULL;
     
     // reserva memoria para guardar tambien el nombre
     nuevoNombre = malloc(sizeof(struct NodoNombreDoble));
@@ -695,6 +782,31 @@ int inicializar_sociedad(struct Sociedad *sociedad,
     return 1;
 }
 
+// construye el AVL compartido y crea la biblioteca de cada comuna
+int crear_bibliotecas(struct Sociedad *sociedad, const char *rutaCorpus) {
+    struct Comuna *comuna;
+
+    sociedad->indiceLibros = biblioteca_construir_indice_avl(rutaCorpus);
+
+    if (sociedad->indiceLibros == NULL) {
+        return 0;
+    }
+
+    comuna = sociedad->comunas;
+
+    while (comuna != NULL) {
+        comuna->biblioteca = biblioteca_crear_con_indice(
+            comuna->nombre, sociedad->indiceLibros);
+
+        if (comuna->biblioteca == NULL) {
+            return 0;
+        }
+
+        comuna = comuna->siguiente;
+    }
+
+    return 1;
+}
 
 // libera una lista de existencias
 void liberar_existencias(struct Existencia *lista) {
@@ -783,7 +895,10 @@ int disolver_comuna(struct Sociedad *sociedad, struct Comuna *comuna) {
     if (comuna->siguiente != NULL) {
         comuna->siguiente->anterior = comuna->anterior;
     }
-
+	// la caché y la biblioteca de la comuna se pierden con ella
+	if (comuna->biblioteca != NULL) {
+		biblioteca_destruir(comuna->biblioteca);
+	}
     // los bienes se pierden y se libera la comuna
     liberar_existencias(comuna->bienes);
     liberar_existencias(comuna->servicios);
@@ -829,7 +944,12 @@ void liberar_sociedad(struct Sociedad *sociedad) {
 			free(serv->nombre);
 			free(serv);
 		}
-		
+		while (personaActual->librosLeidos != NULL) {
+			struct LibroLeido *libro = personaActual->librosLeidos;
+			personaActual->librosLeidos = libro->siguiente;
+			free(libro->nombreArchivo);
+			free(libro);
+}
         free(personaActual->nombre);
         free(personaActual);
     }
@@ -861,10 +981,18 @@ void liberar_sociedad(struct Sociedad *sociedad) {
     while (sociedad->comunas != NULL) {
         comuna = sociedad->comunas;
         sociedad->comunas = comuna->siguiente;
+        if (comuna->biblioteca != NULL) {
+			biblioteca_destruir(comuna->biblioteca);
+		}
         liberar_existencias(comuna->bienes);
         liberar_existencias(comuna->servicios);
 
         free(comuna->nombre);
         free(comuna);
     }
+    
+    if (sociedad->indiceLibros != NULL) {
+		avl_destruir(sociedad->indiceLibros);
+		sociedad->indiceLibros = NULL;
+	}
 }

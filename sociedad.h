@@ -1,5 +1,6 @@
 #ifndef SOCIEDAD_H
 #define SOCIEDAD_H
+#include "biblioteca.h"
 
 // guarda un nombre en una lista simple
 struct NodoNombre {
@@ -60,6 +61,7 @@ struct Comuna {
     float satisfaccion;
     float reciprocidad;
     int administrada;   // 1 = administrada (maximo 3), 0 = autonoma
+    Biblioteca *biblioteca;   // la libera la comuna al disolverse o al cerrar
     float penalizacionEmergencia;
 
     struct Comuna *anterior;
@@ -81,6 +83,7 @@ struct Sociedad {
     struct NodoNombreDoble *nombresComunas;
 
     struct Comuna *comunas;
+    ArbolAVL *indiceLibros;   // AVL compartido por todas las bibliotecas
 };
 
 // pide los datos al usuario, carga los archivos y crea la sociedad
@@ -105,9 +108,17 @@ void calcular_reciprocidad_comuna(struct Sociedad *sociedad,
 // si la necesidad llega a este valor o mas, la comuna se disuelve
 #define UMBRAL_NECESIDAD 45.0f
 // si la satisfaccion baja a este valor o menos, la comuna se disuelve
-#define UMBRAL_SATISFACCION 50S.0f
+#define UMBRAL_SATISFACCION 50.0f
 // disuelve una comuna y muda a sus personas a otra (devuelve 0 si no pudo)
 int disolver_comuna(struct Sociedad *sociedad, struct Comuna *comuna);
 // disuelve las comunas con necesidad muy alta o satisfaccion muy baja
 void revisar_disoluciones(struct Sociedad *sociedad);
+// construye el AVL y crea la biblioteca de cada comuna
+int crear_bibliotecas(struct Sociedad *sociedad, const char *rutaCorpus);
+// registra un libro leido (devuelve 0 si ya lo habia leido o fallo)
+int registrar_libro_leido(struct Persona *p, const char *nombreArchivo);
+// cuenta los libros distintos leidos por una persona
+int contar_libros_leidos(const struct Persona *p);
+// con 3 libros leidos la persona aprende un servicio y gasta sus libros
+int aprender_servicio_leyendo(struct Persona *p, const char *servicio);
 #endif

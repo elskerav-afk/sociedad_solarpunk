@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include "sociedad.h"
 #include "consumo.h"
@@ -15,6 +16,8 @@
 #define AZUL "\033[34m"
 #define NEGRITA "\033[1m"
 #define RESET "\033[0m"
+
+struct Persona *buscar_persona(struct Sociedad *sociedad, int numero);
 
 // muestra un titulo en pantalla
 void mostrar_titulo(const char *titulo) {
@@ -142,7 +145,7 @@ struct Existencia *seleccionar_existencia(
 }
 
 // permite intercambiar bienes o servicios entre dos comunas
-void menu_trueque(struct Sociedad *sociedad) {
+int menu_trueque(struct Sociedad *sociedad) {
     struct Comuna *origen;
     struct Comuna *destino;
     struct Comuna *actual;
@@ -166,12 +169,12 @@ void menu_trueque(struct Sociedad *sociedad) {
 
     if (tipo == 0) {
         printf(AMARILLO "\nSe continua sin realizar trueques.\n" RESET);
-        return;
+        return 0;
     }
 
     if (sociedad->cantidadComunas < 2) {
         mostrar_error("Se necesitan al menos dos comunas para intercambiar.");
-        return;
+        return 0;
     }
 
     printf("\n" NEGRITA "COMUNAS DISPONIBLES\n" RESET);
@@ -226,7 +229,7 @@ void menu_trueque(struct Sociedad *sociedad) {
         listaOrigen, "Seleccione lo que entrega esta comuna:");
 
     if (elementoOrigen == NULL) {
-        return;
+        return 1;
     }
 
     printf("\n" AZUL "Comuna que recibe: %s\n" RESET, destino->nombre);
@@ -235,7 +238,7 @@ void menu_trueque(struct Sociedad *sociedad) {
         listaDestino, "Seleccione lo que entrega la otra comuna:");
 
     if (elementoDestino == NULL) {
-        return;
+        return 1;
     }
 
     // vuelve a pedir la cantidad si no es valida
@@ -276,6 +279,268 @@ void menu_trueque(struct Sociedad *sociedad) {
     } else {
         mostrar_error("No se pudo realizar el intercambio. Revise las existencias.");
     }
+    return 1;
+}
+
+// muestra las comunas y devuelve la que elija el usuario
+struct Comuna *seleccionar_comuna(struct Sociedad *sociedad,
+                                  const char *mensaje) {
+    struct Comuna *actual = sociedad->comunas;
+    int numero;
+    int i = 1;
+
+    printf("\n" NEGRITA "COMUNAS DISPONIBLES\n" RESET);
+
+    while (actual != NULL) {
+        printf("  %d. %s\n", i, actual->nombre);
+        actual = actual->siguiente;
+        i++;
+    }
+
+    numero = pedir_opcion(mensaje, 1, sociedad->cantidadComunas);
+
+    actual = sociedad->comunas;
+
+    for (i = 1; i < numero; i++) {
+        actual = actual->siguiente;
+    }
+
+    return actual;
+}
+
+// muestra las personas de una comuna con su numero y sus servicios
+void mostrar_personas_comuna(struct Sociedad *sociedad,
+                             struct Comuna *comuna) {
+    struct Persona *p = sociedad->personas;
+    int numero = 1;
+
+    printf("\n" NEGRITA "PERSONAS DE %s\n" RESET, comuna->nombre);
+
+    while (p != NULL) {
+        if (p->comunaActual == comuna) {
+            struct ServicioPersona *s = p->servicios;
+
+            printf("  %3d. %-28s", numero, p->nombre);
+
+            if (s == NULL) {
+                printf(" sin servicios");
+            }
+
+            while (s != NULL) {
+                printf(" [%s]", s->nombre);
+                s = s->siguiente;
+            }
+
+            printf("  (dados: %d, recibidos: %d)\n",
+                   p->regalosDados, p->regalosRecibidos);
+        }
+
+        p = p->siguiente;
+        numero++;
+    }
+}
+
+// pide dos personas por su numero y realiza el regalo
+void menu_regalo(struct Sociedad *sociedad) {
+    struct Persona *da;
+    struct Persona *recibe;
+    struct Existencia *bien;
+    int numero;
+
+    numero = pedir_opcion("\nNumero de la persona que regala: ",
+                          1, sociedad->poblacionTotal);
+    da = buscar_persona(sociedad, numero);
+
+    numero = pedir_opcion("Numero de la persona que recibe: ",
+                          1, sociedad->poblacionTotal);
+    recibe = buscar_persona(sociedad, numero);
+
+    printf("\n" AZUL "%s le regala a %s\n" RESET, da->nombre, recibe->nombre);
+
+    bien = seleccionar_existencia(da->comunaActual->bienes,
+                                  "Seleccione el bien que se regala:");
+
+    if (bien == NULL) {
+        return;
+    }
+
+    if (realizar_regalo(da, recibe, bien->nombre)) {
+        calcular_indices_sociedad(sociedad);
+        mostrar_exito("El regalo se realizo correctamente.");
+    } else {
+        mostrar_error("No se pudo realizar el regalo.");
+    }
+}
+
+// una persona busca un texto en la biblioteca de su comuna y lee un libro
+void menu_lectura(struct Sociedad *sociedad) {
+    struct Persona *p;
+    struct NodoNombre *servicio;
+    Biblioteca *bib;
+    const char *libro;
+    char texto[200];
+    int cantidad;
+    int limite;
+    int numero;
+    int i;
+
+    numero = pedir_opcion("\nNumero de la persona que lee: ",
+                          1, sociedad->poblacionTotal);
+    p = buscar_persona(sociedad, numero);
+    bib = p->comunaActual->biblioteca;
+
+    printf("Texto a buscar: ");
+
+    if (fgets(texto, sizeof(texto), stdin) == NULL) {
+        return;
+    }
+
+    texto[strcspn(texto, "\n")] = '\0';
+
+    if (texto[0] == '\0') {
+        mostrar_error("El texto no puede estar vacio.");
+        return;
+    }
+
+    cantidad = biblioteca_buscar_texto(bib, texto, false);
+
+    if (cantidad <= 0) {
+        mostrar_error("No se encontraron libros con ese texto.");
+        return;
+    }
+
+    // muestra como maximo 10 resultados para poder elegir
+    limite = cantidad < 10 ? cantidad : 10;
+
+    printf("\n" NEGRITA "Libros encontrados (%d):\n" RESET, cantidad);
+
+    for (i = 0; i < limite; i++) {
+        printf("  %d. %s\n", i + 1, biblioteca_obtener_resultado_texto(bib, i));
+    }
+
+    numero = pedir_opcion("\nLibro que lee (0 para ninguno): ", 0, limite);
+
+    if (numero == 0) {
+        return;
+    }
+
+    libro = biblioteca_obtener_resultado_texto(bib, numero - 1);
+
+    if (libro == NULL) {
+        return;
+    }
+
+    if (registrar_libro_leido(p, libro)) {
+        printf("%s ha leido %d libro(s) distinto(s).\n",
+               p->nombre, contar_libros_leidos(p));
+    } else {
+        mostrar_error("Ya habia leido ese libro.");
+    }
+
+    if (contar_libros_leidos(p) < 3) {
+        return;
+    }
+
+    printf("\n" NEGRITA "Ya puede aprender un servicio:\n" RESET);
+
+    servicio = sociedad->catalogoServicios;
+
+    for (i = 1; i <= sociedad->cantidadServiciosActivos; i++) {
+        printf("  %d. %s\n", i, servicio->nombre);
+        servicio = servicio->siguiente;
+    }
+
+    numero = pedir_opcion("\nServicio que aprende: ",
+                          1, sociedad->cantidadServiciosActivos);
+
+    servicio = sociedad->catalogoServicios;
+
+    for (i = 1; i < numero; i++) {
+        servicio = servicio->siguiente;
+    }
+
+    if (aprender_servicio_leyendo(p, servicio->nombre)) {
+        mostrar_exito("La persona aprendio el servicio.");
+    } else {
+        mostrar_error("No pudo aprenderlo (quizas ya lo sabia).");
+    }
+}
+
+// menu de la biblioteca de una comuna
+void menu_biblioteca(struct Sociedad *sociedad) {
+    struct Comuna *comuna;
+    char nombre[200];
+    int opcion;
+
+    do {
+        mostrar_titulo("MENU DE BIBLIOTECA");
+
+        printf("1. Ver catalogo de libros (primeros 20)\n");
+        printf("2. Buscar un libro por nombre exacto\n");
+        printf("3. Ver el estado de la cache de una comuna\n");
+        printf("0. Continuar\n\n");
+
+        opcion = pedir_opcion("Opcion: ", 0, 3);
+
+        if (opcion == 0) {
+            continue;
+        }
+
+        comuna = seleccionar_comuna(sociedad, "\nNumero de la comuna: ");
+
+        if (opcion == 1) {
+            biblioteca_listar_catalogo(comuna->biblioteca, 20);
+        } else if (opcion == 2) {
+            printf("Nombre exacto del archivo: ");
+
+            if (fgets(nombre, sizeof(nombre), stdin) != NULL) {
+                nombre[strcspn(nombre, "\n")] = '\0';
+
+                if (!biblioteca_buscar_libro(comuna->biblioteca, nombre, 3)) {
+                    mostrar_error("No existe un libro con ese nombre.");
+                }
+            }
+        } else {
+            biblioteca_mostrar_estado_cache(comuna->biblioteca);
+        }
+    } while (opcion != 0);
+}
+
+// se repite hasta que el usuario elija continuar
+void menu_personas(struct Sociedad *sociedad) {
+    int opcion;
+
+    do {
+        mostrar_titulo("MENU DE PERSONAS");
+
+        printf("1. Ver las personas de una comuna\n");
+        printf("2. Regalar un bien\n");
+        printf("3. Leer un libro (prueba)\n");
+        printf("0. Continuar\n\n");
+
+        opcion = pedir_opcion("Opcion: ", 0, 3);
+
+        if (opcion == 1) {
+            mostrar_personas_comuna(sociedad,
+                seleccionar_comuna(sociedad, "\nNumero de la comuna: "));
+        } else if (opcion == 2) {
+            menu_regalo(sociedad);
+        } else if (opcion == 3) {
+            menu_lectura(sociedad);
+        }
+    } while (opcion != 0);
+}
+
+// busca una persona por su numero en la lista (empieza en 1)
+struct Persona *buscar_persona(struct Sociedad *sociedad, int numero) {
+    struct Persona *p = sociedad->personas;
+    int i;
+
+    for (i = 1; i < numero && p != NULL; i++) {
+        p = p->siguiente;
+    }
+
+    return p;
 }
 
 // muestra el resumen de la simulacion
@@ -360,7 +625,26 @@ int main(void) {
         mostrar_error("No se pudo inicializar la sociedad.");
         return 1;
     }
+	
+	// pide la ruta del corpus (la define el profe el dia de la revision)
+    char rutaCorpus[300];
 
+    limpiar_entrada();   // quita el salto de linea que dejo el ultimo scanf
+    printf("Ruta de la carpeta del corpus: ");
+
+    if (fgets(rutaCorpus, sizeof(rutaCorpus), stdin) == NULL) {
+        liberar_sociedad(&sociedad);
+        return 1;
+    }
+
+    rutaCorpus[strcspn(rutaCorpus, "\n")] = '\0';
+
+    if (!crear_bibliotecas(&sociedad, rutaCorpus)) {
+        mostrar_error("No se pudo crear la biblioteca. Revise la ruta del corpus.");
+        liberar_sociedad(&sociedad);
+        return 1;
+    }
+	
     calcular_indices_sociedad(&sociedad);
 
     mostrar_exito("La sociedad se inicializo correctamente.");
@@ -380,8 +664,12 @@ int main(void) {
             generar_emergencia(&sociedad);
         }
 
-        if (dia < 15) {
-            menu_trueque(&sociedad);
+            if (dia < 15) {
+				menu_personas(&sociedad);
+				menu_biblioteca(&sociedad);
+
+				while (menu_trueque(&sociedad)) {
+            }
         }
 
         // aplica el consumo y actualiza los indices
