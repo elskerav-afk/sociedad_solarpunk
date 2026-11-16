@@ -49,6 +49,9 @@ void biblioteca_mostrar_estado_cache(const Biblioteca *bib);
 // muestra los libros del AVL en orden alfabetico
 void biblioteca_listar_catalogo(const Biblioteca *bib, size_t limite_impresion);
 
+//para obtener el resultado del nombre del archivo en cierta posicion
+const char *biblioteca_obtener_resultado_texto(const Biblioteca *bib, size_t indice);
+
 // libera la memoria de la biblioteca
 // tambien libera el AVL si le pertenece
 void biblioteca_destruir(Biblioteca *bib);

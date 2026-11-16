@@ -245,6 +245,25 @@ void biblioteca_listar_catalogo(const Biblioteca *bib, size_t limite_impresion) 
     }
 }
 
+//busca y devuelve el resultado
+const char *biblioteca_obtener_resultado_texto(const Biblioteca *bib, size_t indice) {
+    if (!bib || !bib->cache_textos || !bib->cache_textos->raiz) {
+        return NULL;
+    }
+
+    const ListaArchivos *lista = &bib->cache_textos->raiz->resultados;
+    if (indice >= lista->cantidad) {
+        return NULL;
+    }
+
+    const NodoArchivo *actual = lista->cabeza;
+    for (size_t i = 0; i < indice && actual != NULL; i++) {
+        actual = actual->siguiente;
+    }
+
+    return actual ? actual->nombre_archivo : NULL;
+}
+
 // libera la memoria de la biblioteca y sus estructuras
 void biblioteca_destruir(Biblioteca *bib) {
     if (!bib) return;
