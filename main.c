@@ -297,7 +297,7 @@ void mostrar_resumen(struct Sociedad *sociedad) {
         comuna = comuna->siguiente;
     }
 
-    printf("Dias simulados: %d\n", sociedad->dia);
+    printf("Dias simulados: %d\n", sociedad->dia-1);
     printf("Poblacion total: %d\n", poblacion);
     printf("Comunas registradas: %d\n", cantidadComunas);
 
@@ -328,7 +328,9 @@ void mostrar_resumen(struct Sociedad *sociedad) {
 
         comuna = comuna->siguiente;
     }
-
+	if (sociedad->cantidadComunas < 3) {
+		mostrar_error("RESULTADO FINAL: FRACASO, quedaron menos de 3 comunas.");
+	}
     printf("\n");
 }
 
@@ -385,7 +387,16 @@ int main(void) {
         // aplica el consumo y actualiza los indices
         aplicar_consumo_diario(&sociedad);
         calcular_indices_sociedad(&sociedad);
+		
+		int comunasAntes = sociedad.cantidadComunas;
 
+		revisar_disoluciones(&sociedad);
+		calcular_indices_sociedad(&sociedad);
+
+		if (comunasAntes >= 3 && sociedad.cantidadComunas < 3) {
+			mostrar_error("FRACASO: quedan menos de 3 comunas.");
+		}
+		
         printf("\n" CIAN "Estado al finalizar el dia %d:\n" RESET, dia);
         mostrar_comunas(&sociedad);
     }

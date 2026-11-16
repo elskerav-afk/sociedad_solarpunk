@@ -161,3 +161,35 @@ int realizar_trueque_servicios(struct Comuna *origen,
 
     return 1;
 }
+
+// una persona le regala una unidad de un bien a otra
+int realizar_regalo(struct Persona *da, struct Persona *recibe,
+                    const char *bien) {
+    struct Existencia *sale;
+    struct Existencia *entra;
+
+    if (da == recibe || da->comunaActual == NULL ||
+        recibe->comunaActual == NULL) {
+        printf("El regalo no es valido.\n");
+        return 0;
+    }
+
+    // si son de comunas distintas, se mueve una unidad del bien
+    if (da->comunaActual != recibe->comunaActual) {
+        sale = buscar_bien(da->comunaActual->bienes, bien);
+        entra = buscar_bien(recibe->comunaActual->bienes, bien);
+
+        if (sale == NULL || entra == NULL ||
+            sale->cantidad < 1 || entra->cantidad >= entra->maximo) {
+            printf("No se puede realizar el regalo.\n");
+            return 0;
+        }
+
+        sale->cantidad--;
+        entra->cantidad++;
+    }
+
+    da->regalosDados++;
+    recibe->regalosRecibidos++;
+    return 1;
+}

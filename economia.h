@@ -14,5 +14,8 @@ int realizar_trueque_servicios(struct Comuna *origen,
                                const char *servicioOrigen,
                                const char *servicioDestino,
                                int cantidad);
+// una persona le regala un bien a otra (mueve 1 unidad si son de comunas distintas)
+int realizar_regalo(struct Persona *da, struct Persona *recibe,
+                    const char *bien);
 
 #endif

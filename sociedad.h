@@ -58,6 +58,7 @@ struct Comuna {
 
     float necesidad;
     float satisfaccion;
+    float reciprocidad;
     float penalizacionEmergencia;
 
     struct Comuna *anterior;
@@ -97,4 +98,15 @@ void calcular_indices_comuna(struct Comuna *comuna);
 void calcular_indices_sociedad(struct Sociedad *sociedad);
 // agrega un servicio a una persona (devuelve 0 si ya lo sabia o fallo)
 int persona_aprender_servicio(struct Persona *p, const char *servicio);
+// calcula el indice de reciprocidad de una comuna (0 a 100)
+void calcular_reciprocidad_comuna(struct Sociedad *sociedad,
+                                  struct Comuna *comuna);
+// si la necesidad llega a este valor o mas, la comuna se disuelve
+#define UMBRAL_NECESIDAD 45.0f
+// si la satisfaccion baja a este valor o menos, la comuna se disuelve
+#define UMBRAL_SATISFACCION 50.0f
+// disuelve una comuna y muda a sus personas a otra (devuelve 0 si no pudo)
+int disolver_comuna(struct Sociedad *sociedad, struct Comuna *comuna);
+// disuelve las comunas con necesidad muy alta o satisfaccion muy baja
+void revisar_disoluciones(struct Sociedad *sociedad);
 #endif

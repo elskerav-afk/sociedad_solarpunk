@@ -151,6 +151,30 @@ int agregar_servicio(struct Sociedad *sociedad, const char *nombre) {
     return 1;
 }
 
+// calcula la reciprocidad de una comuna: 100 = dados y recibidos equilibrados
+void calcular_reciprocidad_comuna(struct Sociedad *sociedad,
+                                  struct Comuna *comuna) {
+    int dados = 0;
+    int recibidos = 0;
+    struct Persona *p = sociedad->personas;
+
+    while (p != NULL) {
+        if (p->comunaActual == comuna) {
+            dados += p->regalosDados;
+            recibidos += p->regalosRecibidos;
+        }
+        p = p->siguiente;
+    }
+
+    if (dados == 0 && recibidos == 0) {
+        comuna->reciprocidad = 100;
+    } else if (dados > recibidos) {
+        comuna->reciprocidad = 100.0f * recibidos / dados;
+    } else {
+        comuna->reciprocidad = 100.0f * dados / recibidos;
+    }
+}
+
 
  // agrega una comuna y guarda su nombre en la lista doble
 int agregar_comuna(struct Sociedad *sociedad, const char *nombre) {
@@ -175,9 +199,10 @@ int agregar_comuna(struct Sociedad *sociedad, const char *nombre) {
     nueva->necesidad = 0;
     nueva->satisfaccion = 0;
     nueva->penalizacionEmergencia = 0;
+    nueva->reciprocidad = 100;
     nueva->anterior = NULL;
     nueva->siguiente = NULL;
-
+    
     // reserva memoria para guardar tambien el nombre
     nuevoNombre = malloc(sizeof(struct NodoNombreDoble));
 
@@ -394,6 +419,7 @@ void calcular_indices_sociedad(struct Sociedad *sociedad) {
     for (i = 0; actual != NULL && i < cantidad; i++) {
         float sumaVecinas = 0;
         int cantidadVecinas = 0;
+        calcular_reciprocidad_comuna(sociedad, actual);
 
         vecina = sociedad->comunas;
 
@@ -413,17 +439,18 @@ void calcular_indices_sociedad(struct Sociedad *sociedad) {
         }
 
         if (cantidadVecinas > 0) {
-            float bienestarPropio = bienestarBase[i];
-            float promedioVecinas = sumaVecinas / cantidadVecinas;
+			float bienestarPropio = bienestarBase[i];
+			float promedioVecinas = sumaVecinas / cantidadVecinas;
 
-            actual->satisfaccion =
-                0.7f * bienestarPropio
-                + 0.3f * promedioVecinas;
-        } else {
-            actual->satisfaccion =
-                100.0f - actual->necesidad
-                - actual->penalizacionEmergencia;
-        }
+			actual->satisfaccion =
+			0.6f * bienestarPropio
+			+ 0.25f * promedioVecinas
+			+ 0.15f * actual->reciprocidad;
+			} else {
+			actual->satisfaccion =
+			0.85f * bienestarBase[i]
+			+ 0.15f * actual->reciprocidad;
+		}
 
         if (actual->satisfaccion < 0) {
             actual->satisfaccion = 0;
@@ -505,11 +532,11 @@ int inicializar_sociedad(struct Sociedad *sociedad,
     int bienesActivos;
     int serviciosActivos;
 
-    printf("Cantidad de comunas activas (1-%d): ",
+    printf("Cantidad de comunas activas (3-%d): ",
            comunas.cantidad);
 
     if (scanf("%d", &comunasActivas) != 1 ||
-        comunasActivas < 1 ||
+        comunasActivas < 3 ||
         comunasActivas > comunas.cantidad) {
         printf("Cantidad de comunas no valida\n");
         liberar_lista(&personas);
@@ -645,35 +672,24 @@ int inicializar_sociedad(struct Sociedad *sociedad,
     liberar_lista(&bienes);
     liberar_lista(&servicios);
 	// asigna servicios iniciales a las personas (0, 1 o 2)
-struct Persona *personaServ = sociedad->personas;
+	struct Persona *personaServ = sociedad->personas;
 
-while (personaServ != NULL) {
-    int cantidadServicios = rand() % 3;
+	while (personaServ != NULL) {
+		int cantidadServicios = rand() % 3;
 
-    for (int k = 0; k < cantidadServicios; k++) {
-        struct NodoNombre *servicio = sociedad->catalogoServicios;
-        int posicion = rand() % sociedad->cantidadServiciosActivos;
+		for (int k = 0; k < cantidadServicios; k++) {
+			struct NodoNombre *servicio = sociedad->catalogoServicios;
+			int posicion = rand() % sociedad->cantidadServiciosActivos;
 
-        for (int j = 0; j < posicion; j++) {
-            servicio = servicio->siguiente;
-        }
+			for (int j = 0; j < posicion; j++) {
+				servicio = servicio->siguiente;
+			}
 
-        persona_aprender_servicio(personaServ, servicio->nombre);
-    }
+			persona_aprender_servicio(personaServ, servicio->nombre);
+		}	
 
-    personaServ = personaServ->siguiente;
-}
-struct Persona *p = sociedad->personas;
-while (p != NULL) {
-    printf("%s -> %s |", p->nombre, p->comunaActual->nombre);
-    struct ServicioPersona *s = p->servicios;
-    while (s != NULL) {
-        printf(" %s,", s->nombre);
-        s = s->siguiente;
-    }
-    printf("\n");
-    p = p->siguiente;
-}
+		personaServ = personaServ->siguiente;
+	}
     return 1;
 }
 
@@ -690,7 +706,94 @@ void liberar_existencias(struct Existencia *lista) {
         free(actual);
     }
 }
+// disuelve una comuna: sus personas se mudan a la comuna con mas satisfaccion
+// los servicios viajan con las personas y los bienes se pierden
+int disolver_comuna(struct Sociedad *sociedad, struct Comuna *comuna) {
+    struct Comuna *destino = NULL;
+    struct Comuna *actual = sociedad->comunas;
+    struct Persona *p;
 
+    // busca la comuna destino: la de mayor satisfaccion que no sea la disuelta
+    while (actual != NULL) {
+        if (actual != comuna &&
+            (destino == NULL || actual->satisfaccion > destino->satisfaccion)) {
+            destino = actual;
+        }
+        actual = actual->siguiente;
+    }
+
+    if (destino == NULL) {
+        return 0;
+    }
+
+    printf("La comuna %s se disuelve. Sus personas se mudan a %s.\n",
+           comuna->nombre, destino->nombre);
+
+    // muda a las personas de la comuna
+    p = sociedad->personas;
+
+    while (p != NULL) {
+        if (p->comunaActual == comuna) {
+            struct ServicioPersona *s = p->servicios;
+
+            p->comunaActual = destino;
+            destino->poblacion++;
+
+            // sus servicios viajan con ella: sube el stock del destino
+            while (s != NULL) {
+                struct Existencia *e = destino->servicios;
+
+                while (e != NULL) {
+                    if (strcmp(e->nombre, s->nombre) == 0) {
+                        e->maximo += 2;
+                        e->cantidad += 2;
+                    }
+                    e = e->siguiente;
+                }
+                s = s->siguiente;
+            }
+        }
+        p = p->siguiente;
+    }
+
+    // saca la comuna de la lista
+    if (comuna->anterior != NULL) {
+        comuna->anterior->siguiente = comuna->siguiente;
+    } else {
+        sociedad->comunas = comuna->siguiente;
+    }
+
+    if (comuna->siguiente != NULL) {
+        comuna->siguiente->anterior = comuna->anterior;
+    }
+
+    // los bienes se pierden y se libera la comuna
+    liberar_existencias(comuna->bienes);
+    liberar_existencias(comuna->servicios);
+    free(comuna->nombre);
+    free(comuna);
+    sociedad->cantidadComunas--;
+
+    return 1;
+}
+
+// disuelve las comunas con necesidad muy alta o satisfaccion muy baja
+void revisar_disoluciones(struct Sociedad *sociedad) {
+    struct Comuna *actual = sociedad->comunas;
+    struct Comuna *siguiente;
+
+    while (actual != NULL) {
+        // se guarda antes porque "actual" puede liberarse
+        siguiente = actual->siguiente;
+
+        if (actual->necesidad >= UMBRAL_NECESIDAD ||
+            actual->satisfaccion <= UMBRAL_SATISFACCION) {
+            disolver_comuna(sociedad, actual);
+        }
+
+        actual = siguiente;
+    }
+}
 // libera toda la memoria de la sociedad
 void liberar_sociedad(struct Sociedad *sociedad) {
     struct NodoNombre *persona;
