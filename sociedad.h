@@ -84,6 +84,15 @@ struct Sociedad {
 
     struct Comuna *comunas;
     ArbolAVL *indiceLibros;   // AVL compartido por todas las bibliotecas
+    struct SolicitudBiblioteca *colaSolicitudes;
+};
+
+// nodo de cola para solicitudes de conocimiento entre bibliotecas (Funcionalidad Extra 10%)
+struct SolicitudBiblioteca {
+    char *nombrePersona;
+    char *terminoBuscado;
+    struct Comuna *comunaOrigen;
+    struct SolicitudBiblioteca *siguiente;
 };
 
 // pide los datos al usuario, carga los archivos y crea la sociedad
@@ -122,3 +131,15 @@ int contar_libros_leidos(const struct Persona *p);
 // con 3 libros leidos la persona aprende un servicio y gasta sus libros
 int aprender_servicio_leyendo(struct Persona *p, const char *servicio);
 #endif
+
+// ejecuta acciones automaticas en comunas autonomas (administrada == 0)
+void simular_comunas_autonomas(struct Sociedad *sociedad);
+
+// encola una solicitud de busqueda interbibliotecaria (Funcionalidad Extra 10%)
+int encolar_solicitud_biblioteca(struct Sociedad *sociedad,
+                                 struct Comuna *origen,
+                                 const char *nombrePersona,
+                                 const char *termino);
+
+// procesa la cola de solicitudes buscando en comunas vecinas y transfiriendo cache Splay
+void procesar_red_interbibliotecaria(struct Sociedad *sociedad);

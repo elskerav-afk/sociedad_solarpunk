@@ -471,82 +471,75 @@ void calcular_indices_sociedad(struct Sociedad *sociedad) {
     struct Comuna *actual;
     struct Comuna *vecina;
     float bienestarBase[50];
+    float necesidadBase[50];
     int cantidad = 0;
-    int i;
-    int j;
 
-    if (sociedad == NULL) {
-        return;
-    }
+    if (sociedad == NULL) return;
 
     actual = sociedad->comunas;
-
-    // calcula los indices propios de cada comuna
     while (actual != NULL && cantidad < 50) {
         calcular_indices_comuna(actual);
+        necesidadBase[cantidad] = actual->necesidad;
+        bienestarBase[cantidad] = 100.0f - actual->necesidad - actual->penalizacionEmergencia;
 
-        bienestarBase[cantidad] =
-            100.0f - actual->necesidad
-            - actual->penalizacionEmergencia;
-
-        if (bienestarBase[cantidad] < 0) {
-            bienestarBase[cantidad] = 0;
-        }
-
-        if (bienestarBase[cantidad] > 100) {
-            bienestarBase[cantidad] = 100;
-        }
+        if (bienestarBase[cantidad] < 0) bienestarBase[cantidad] = 0;
+        if (bienestarBase[cantidad] > 100) bienestarBase[cantidad] = 100;
 
         actual = actual->siguiente;
         cantidad++;
     }
 
-    // combina el bienestar propio con el de las comunas cercanas
     actual = sociedad->comunas;
-
-    for (i = 0; actual != NULL && i < cantidad; i++) {
-        float sumaVecinas = 0;
+    for (int i = 0; actual != NULL && i < cantidad; i++) {
+        float sumaSatVecinas = 0.0f;
+        float sumaNecVecinas = 0.0f;
         int cantidadVecinas = 0;
+        int regalosRecibidosComuna = 0;
+
         calcular_reciprocidad_comuna(sociedad, actual);
 
-        vecina = sociedad->comunas;
-
-        for (j = 0; vecina != NULL && j < cantidad; j++) {
-            int distancia = i - j;
-
-            if (distancia < 0) {
-                distancia = -distancia;
+        // suma regalos recibidos por los habitantes de esta comuna
+        struct Persona *p = sociedad->personas;
+        while (p != NULL) {
+            if (p->comunaActual == actual) {
+                regalosRecibidosComuna += p->regalosRecibidos;
             }
+            p = p->siguiente;
+        }
 
+        vecina = sociedad->comunas;
+        for (int j = 0; vecina != NULL && j < cantidad; j++) {
+            int distancia = (i > j) ? (i - j) : (j - i);
             if (distancia >= 1 && distancia <= 2) {
-                sumaVecinas += bienestarBase[j];
+                sumaSatVecinas += bienestarBase[j];
+                sumaNecVecinas += necesidadBase[j];
                 cantidadVecinas++;
             }
-
             vecina = vecina->siguiente;
         }
 
+        float bonoRegalos = (regalosRecibidosComuna > 20) ? 5.0f : (regalosRecibidosComuna * 0.25f);
+
         if (cantidadVecinas > 0) {
-			float bienestarPropio = bienestarBase[i];
-			float promedioVecinas = sumaVecinas / cantidadVecinas;
+            float promSatVecinas = sumaSatVecinas / cantidadVecinas;
+            float promNecVecinas = sumaNecVecinas / cantidadVecinas;
 
-			actual->satisfaccion =
-			0.6f * bienestarPropio
-			+ 0.25f * promedioVecinas
-			+ 0.15f * actual->reciprocidad;
-			} else {
-			actual->satisfaccion =
-			0.85f * bienestarBase[i]
-			+ 0.15f * actual->reciprocidad;
-		}
-
-        if (actual->satisfaccion < 0) {
-            actual->satisfaccion = 0;
+            // incorpora necesidad local, necesidad de circundantes, satisfaccion de circundantes, reciprocidad y regalos recibidos
+            actual->satisfaccion =
+                0.50f * bienestarBase[i] +
+                0.20f * promSatVecinas +
+                0.15f * actual->reciprocidad -
+                0.10f * promNecVecinas +
+                bonoRegalos;
+        } else {
+            actual->satisfaccion =
+                0.80f * bienestarBase[i] +
+                0.15f * actual->reciprocidad +
+                bonoRegalos;
         }
 
-        if (actual->satisfaccion > 100) {
-            actual->satisfaccion = 100;
-        }
+        if (actual->satisfaccion < 0) actual->satisfaccion = 0;
+        if (actual->satisfaccion > 100) actual->satisfaccion = 100;
 
         actual = actual->siguiente;
     }
@@ -995,4 +988,119 @@ void liberar_sociedad(struct Sociedad *sociedad) {
 		avl_destruir(sociedad->indiceLibros);
 		sociedad->indiceLibros = NULL;
 	}
+
+    while (sociedad->colaSolicitudes != NULL) {
+        struct SolicitudBiblioteca *sol = sociedad->colaSolicitudes;
+        sociedad->colaSolicitudes = sol->siguiente;
+        free(sol->nombrePersona);
+        free(sol->terminoBuscado);
+        free(sol);
+    }
+}
+
+
+// las comunas autonomas (administrada == 0) gestionan sus propios excedentes diariamente
+void simular_comunas_autonomas(struct Sociedad *sociedad) {
+    struct Comuna *c = sociedad->comunas;
+    printf("\n--- Gestion de Comunas Autonomas ---\n");
+    while (c != NULL) {
+        if (c->administrada == 0 && c->bienes != NULL) {
+            // busca el bien con mayor excedente y lo comparte con una vecina necesitada
+            struct Existencia *mejor = c->bienes;
+            struct Existencia *aux = c->bienes->siguiente;
+            while (aux != NULL) {
+                if (aux->cantidad > mejor->cantidad) mejor = aux;
+                aux = aux->siguiente;
+            }
+            struct Comuna *dest = (c->siguiente != NULL) ? c->siguiente : c->anterior;
+            if (dest != NULL && mejor->cantidad > 5) {
+                struct Existencia *rec = dest->bienes;
+                while (rec != NULL && strcmp(rec->nombre, mejor->nombre) != 0) {
+                    rec = rec->siguiente;
+                }
+                if (rec != NULL && rec->cantidad < rec->maximo) {
+                    mejor->cantidad--;
+                    rec->cantidad++;
+                    printf("  [Autonoma] %s envio 1 unidad de %s a %s.\n",
+                           c->nombre, mejor->nombre, dest->nombre);
+                }
+            }
+        }
+        c = c->siguiente;
+    }
+}
+
+int encolar_solicitud_biblioteca(struct Sociedad *sociedad,
+                                 struct Comuna *origen,
+                                 const char *nombrePersona,
+                                 const char *termino) {
+    struct SolicitudBiblioteca *nueva = malloc(sizeof(struct SolicitudBiblioteca));
+    if (!nueva) return 0;
+
+    nueva->nombrePersona = copiar_texto(nombrePersona);
+    nueva->terminoBuscado = copiar_texto(termino);
+    if (!nueva->nombrePersona || !nueva->terminoBuscado) {
+        free(nueva->nombrePersona);
+        free(nueva->terminoBuscado);
+        free(nueva);
+        return 0;
+    }
+    nueva->comunaOrigen = origen;
+    nueva->siguiente = NULL;
+
+    if (sociedad->colaSolicitudes == NULL) {
+        sociedad->colaSolicitudes = nueva;
+    } else {
+        struct SolicitudBiblioteca *act = sociedad->colaSolicitudes;
+        while (act->siguiente != NULL) act = act->siguiente;
+        act->siguiente = nueva;
+    }
+    return 1;
+}
+
+void procesar_red_interbibliotecaria(struct Sociedad *sociedad) {
+    if (sociedad->colaSolicitudes == NULL) return;
+
+    printf("\n=== PROCESANDO RED INTERBIBLIOTECARIA (COLA DE PRÉSTAMOS) ===\n");
+    while (sociedad->colaSolicitudes != NULL) {
+        struct SolicitudBiblioteca *sol = sociedad->colaSolicitudes;
+        sociedad->colaSolicitudes = sol->siguiente;
+
+        bool resuelta = false;
+        struct Comuna *vecina = sociedad->comunas;
+        while (vecina != NULL) {
+            if (vecina != sol->comunaOrigen && vecina->biblioteca != NULL) {
+                // revisa si la vecina ya tiene el termino cacheado en su arbol Splay
+                NodoSplay *hit = splay_buscar(vecina->biblioteca->cache_textos,
+                                              sol->terminoBuscado, true);
+                if (hit != NULL && hit->resultados.cantidad > 0) {
+                    printf("  [Red] %s comparte cache de '%s' con %s (para %s).\n",
+                           vecina->nombre, sol->terminoBuscado,
+                           sol->comunaOrigen->nombre, sol->nombrePersona);
+                    // replica el resultado en el Splay Tree de la comuna origen
+                    ListaArchivos copia;
+                    lista_archivos_inicializar(&copia);
+                    NodoArchivo *arch = hit->resultados.cabeza;
+                    while (arch != NULL) {
+                        lista_archivos_agregar(&copia, arch->nombre_archivo);
+                        arch = arch->siguiente;
+                    }
+                    splay_insertar(sol->comunaOrigen->biblioteca->cache_textos,
+                                   sol->terminoBuscado, &copia, true);
+                    resuelta = true;
+                    break;
+                }
+            }
+            vecina = vecina->siguiente;
+        }
+
+        if (!resuelta) {
+            printf("  [Red] Ninguna comuna vecina tenia '%s' cacheado aun.\n",
+                   sol->terminoBuscado);
+        }
+
+        free(sol->nombrePersona);
+        free(sol->terminoBuscado);
+        free(sol);
+    }
 }

@@ -1,0 +1,4012 @@
+=== ESTRUCTURA DEL PROYECTO ===
+.
+./Datos
+./Datos/bienes
+./Datos/comunas
+./Datos/personas
+./Datos/servicios
+./biblioteca.h
+./economia.h
+./Corpus_prueba
+./Corpus_prueba/quijote.txt
+./Corpus_prueba/dos_ciudades.txt
+./Corpus_prueba/moby_dick.txt
+./Corpus_prueba/cuento.txt
+./test_bib
+./arbol_avl.h
+./listas.c
+./sociedad.h.gch
+./arbol_chaflaneado.c
+./revision_proyecto.txt
+./sociedad.c
+./arbol_chaflaneado.h
+./Memes
+./Memes/Spidermans.jpg
+./Memes/Defensa.mp4
+./Memes/poo.jpg
+./salida.txt
+./economia.c
+./pruebas.c
+./0
+./test_biblioteca.c
+./consumo.h
+./arbol_avl.c
+./emergencias.h
+./sociedad.h
+./corpus
+./corpus/libro_23.txt
+./corpus/libro_21.txt
+./corpus/libro_8.txt
+./corpus/libro_24.txt
+./corpus/libro_12.txt
+./corpus/libro_22.txt
+./corpus/libro_19.txt
+./corpus/libro_2.txt
+./corpus/libro_25.txt
+./corpus/libro_20.txt
+./corpus/libro_7.txt
+./corpus/libro_27.txt
+./corpus/libro_29.txt
+./corpus/libro_4.txt
+./corpus/libro_1.txt
+./corpus/libro_16.txt
+./corpus/libro_18.txt
+./corpus/libro_10.txt
+./corpus/libro_15.txt
+./corpus/libro_11.txt
+./corpus/libro_28.txt
+./corpus/libro_17.txt
+./corpus/libro_14.txt
+./corpus/libro_30.txt
+./corpus/libro_3.txt
+./corpus/libro_26.txt
+./corpus/libro_13.txt
+./corpus/libro_5.txt
+./corpus/libro_9.txt
+./corpus/libro_6.txt
+./listas.h
+./main.c
+./consumo.c
+./programa
+./34736
+./archivos.h
+./sociedad.o
+./biblioteca.c
+./archivos.c
+./instrucciones.txt
+./Logo.jpg
+./README.md
+./emergencias.c
+./corpus_test
+./corpus_test/kropotkin.txt
+./corpus_test/malatesta.txt
+./corpus_test/goldman.txt
+
+=== HISTORIAL GIT (Commits: 44) ===
+d1a5449 Sistema de busquedas
+dd41e31 Metodo para retornar el nombre agregado
+21bb85d Cambio de administraciones
+8a9892e Disolucion de comunas y movimiento de personas a otras comunas
+28a2142 Añadir lo de las bibliotecas
+a695550 Arbol chaflaneado
+49588e4 Merge branch 'main' of https://github.com/gmgarro/sociedad_solarpunk
+e0e32c3 CAmbios
+ed881b4 Recuperacion de funcion cargar_archivo
+deea8c8 Merge branch 'main' of github.com:gmgarro/sociedad_solarpunk
+ed79b04 Cambios en archivos
+8e92b11 Cambios en la estructura de Persona, y asignacion de personas a comunas y servicios a cada persona
+1947f08 Instrucciones
+cade471 Cambio ubicacion logo
+b286498 Momazo y logo
+4d34702 Cambio de nombre en el meme y video
+57b3f23 Cambio en el readme
+bcd8890 Meme de spidermans
+63a927c Cambios de colores y detalles en la interfaz
+a59e573 Ultimos cambios
+ed2c3c2 Trueque corregido
+ec3dccd Economia e indices listos
+5c62043 Completa trueques de bienes y servicios
+11d9887 Implementa trueques entre comunas
+2d75586 Implementa trueques entre comunas
+8e389dc Trueque
+d0dda89 Implementa y prueba trueque entre comunas
+9278fc9 Agregar afectacion a comunas cercanas
+80b2502 Separacion de responsabilidades
+a9c7588 Consumo y emergencias
+
+=== CÓDIGO FUENTE ===
+==> ./biblioteca.h <==
+#ifndef BIBLIOTECA_H
+#define BIBLIOTECA_H
+
+#include "arbol_avl.h"
+#include "arbol_chaflaneado.h"
+#include <stdbool.h>
+#include <stddef.h>
+
+// estructura principal de la biblioteca
+typedef struct Biblioteca {
+    char *nombre_comuna;            // nombre de la comuna
+    ArbolAVL *indice_libros;        // arbol AVL con los libros
+    bool es_duena_indice;           // indica si debe liberar el AVL
+    ArbolChaflaneado *cache_textos; // arbol para guardar las busquedas de texto
+    size_t cache_hits;              // cantidad de busquedas encontradas en cache
+    size_t cache_misses;            // cantidad de busquedas que necesitaron leer archivos
+} Biblioteca;
+
+// crea un indice AVL recorriendo la carpeta del corpus
+ArbolAVL *biblioteca_construir_indice_avl(const char *ruta_corpus);
+
+// crea una biblioteca y construye su propio indice AVL
+Biblioteca *biblioteca_crear(const char *nombre_comuna, const char *ruta_corpus);
+
+// crea una biblioteca usando un indice AVL que ya existe
+// la biblioteca no libera ese indice al destruirse
+Biblioteca *biblioteca_crear_con_indice(const char *nombre_comuna, ArbolAVL *indice_compartido);
+
+// busca un libro por el nombre exacto del archivo
+// si lo encuentra, muestra su ruta y un fragmento si se solicita
+// retorna true si existe o false si no se encuentra
+bool biblioteca_buscar_libro(const Biblioteca *bib,
+                             const char *nombre_archivo,
+                             size_t lineas_preview);
+
+// busca un texto dentro de los libros usando el arbol chaflaneado y los archivos
+// primero revisa si el texto ya esta guardado en cache
+// si lo encuentra, muestra los resultados guardados
+// si no lo encuentra, busca en los archivos y guarda los resultados en cache
+// mostrar_traza_splay permite ver los movimientos del arbol
+// retorna la cantidad de libros encontrados o -1 si ocurre un error
+int biblioteca_buscar_texto(Biblioteca *bib,
+                            const char *texto_buscado,
+                            bool mostrar_traza_splay);
+
+// muestra el arbol chaflaneado y las estadisticas de la cache
+void biblioteca_mostrar_estado_cache(const Biblioteca *bib);
+
+// muestra los libros del AVL en orden alfabetico
+void biblioteca_listar_catalogo(const Biblioteca *bib, size_t limite_impresion);
+
+//para obtener el resultado del nombre del archivo en cierta posicion
+const char *biblioteca_obtener_resultado_texto(const Biblioteca *bib, size_t indice);
+
+// libera la memoria de la biblioteca
+// tambien libera el AVL si le pertenece
+void biblioteca_destruir(Biblioteca *bib);
+
+#endif // BIBLIOTECA_H
+==> ./economia.h <==
+#ifndef ECONOMIA_H
+#define ECONOMIA_H
+
+#include "sociedad.h"
+
+// Realiza un trueque entre dos comunas
+int realizar_trueque(struct Comuna *origen,
+                     struct Comuna *destino,
+                     const char *bienOrigen,
+                     const char *bienDestino,
+                     int cantidad);
+int realizar_trueque_servicios(struct Comuna *origen,
+                               struct Comuna *destino,
+                               const char *servicioOrigen,
+                               const char *servicioDestino,
+                               int cantidad);
+// una persona le regala un bien a otra (mueve 1 unidad si son de comunas distintas)
+int realizar_regalo(struct Persona *da, struct Persona *recibe,
+                    const char *bien);
+
+#endif
+
+==> ./arbol_avl.h <==
+#ifndef ARBOL_AVL_H
+#define ARBOL_AVL_H
+
+#include <stdbool.h>
+#include <stddef.h>
+
+// nodo del arbol AVL
+typedef struct NodoAVL {
+    char *nombre_archivo;     // nombre del archivo
+    char *ruta_completa;      // ruta donde se encuentra el archivo
+    int altura;
+    struct NodoAVL *izq;
+    struct NodoAVL *der;
+} NodoAVL;
+
+// estructura principal del arbol AVL
+typedef struct ArbolAVL {
+    NodoAVL *raiz;
+    size_t total_nodos;
+} ArbolAVL;
+
+// funcion que se ejecuta al recorrer cada nodo del arbol
+typedef void (*CallbackNodoAVL)(const NodoAVL *nodo, void *contexto);
+
+// crea un arbol AVL vacio
+ArbolAVL *avl_crear(void);
+
+// inserta un libro en el arbol manteniendo el balance
+// si el nombre ya existe no lo vuelve a insertar
+// retorna true si se inserto correctamente o false si ocurre un error
+bool avl_insertar(ArbolAVL *arbol, const char *nombre_archivo, const char *ruta_completa);
+
+// busca un libro por su nombre exacto
+// retorna el nodo encontrado o NULL si no existe
+const NodoAVL *avl_buscar_exacto(const ArbolAVL *arbol, const char *nombre_archivo);
+
+// recorre todos los nodos del arbol en orden alfabetico
+// ejecuta el callback por cada libro encontrado
+void avl_recorrer_inorder(const ArbolAVL *arbol, CallbackNodoAVL callback, void *contexto);
+
+// obtiene la altura del arbol
+// retorna 0 si el arbol esta vacio
+int avl_obtener_altura(const ArbolAVL *arbol);
+
+// libera la memoria utilizada por el arbol y sus nodos
+void avl_destruir(ArbolAVL *arbol);
+
+#endif /* ARBOL_AVL_H */
+==> ./listas.c <==
+
+#define _POSIX_C_SOURCE 200809L
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include "listas.h"
+
+// deja la lista vacía y pone la cantidad de nodos en cero
+void inicializar_lista(Lista *lista) {
+    lista->inicio = NULL;
+    lista->final = NULL;
+    lista->cantidad = 0;
+}
+
+// crea un nodo con el nombre y lo agrega al final de la lista
+int insertar_final(Lista *lista, const char *nombre) {
+    Nodo *nuevo = malloc(sizeof(Nodo));
+
+    if (nuevo == NULL) {
+        return 0;
+    }
+
+    nuevo->nombre = malloc(strlen(nombre) + 1);
+
+    if (nuevo->nombre == NULL) {
+        free(nuevo);
+        return 0;
+    }
+
+    strcpy(nuevo->nombre, nombre);
+    nuevo->siguiente = NULL;
+
+    if (lista->inicio == NULL) {
+        lista->inicio = nuevo;
+    } else {
+        lista->final->siguiente = nuevo;
+    }
+
+    lista->final = nuevo;
+    lista->cantidad++;
+
+    return 1;
+}
+
+// recorre los nodos desde el inicio e imprime cada nombre
+void imprimir_lista(const Lista *lista) {
+    Nodo *actual = lista->inicio;
+
+    while (actual != NULL) {
+        printf("%s\n", actual->nombre);
+        actual = actual->siguiente;
+    }
+}
+
+// recorre la lista, libera la memoria y la deja vacía
+void liberar_lista(Lista *lista) {
+    Nodo *actual = lista->inicio;
+
+    while (actual != NULL) {
+        Nodo *siguiente = actual->siguiente;
+
+        free(actual->nombre);
+        free(actual);
+
+        actual = siguiente;
+    }
+
+    inicializar_lista(lista);
+}
+
+// lee un archivo y guarda sus nombres en una lista
+int cargar_archivo(const char *nombre_archivo, Lista *lista) {
+    FILE *archivo = fopen(nombre_archivo, "r");
+
+    // revisa si el archivo se pudo abrir
+    if (archivo == NULL) {
+        printf("no se pudo abrir el archivo: %s\n", nombre_archivo);
+        return 0;
+    }
+
+    char *linea = NULL;
+    size_t capacidad = 0;
+    ssize_t longitud;
+    int resultado = 1;
+
+    // lee el archivo linea por linea
+    while ((longitud = getline(&linea, &capacidad, archivo)) != -1) {
+
+        // elimina el salto de linea del texto
+        linea[strcspn(linea, "\r\n")] = '\0';
+
+        // guarda el nombre si la linea no esta vacia
+        if (strlen(linea) > 0) {
+            if (!insertar_final(lista, linea)) {
+                printf("no se pudo guardar un nombre en la lista\n");
+                resultado = 0;
+                break;
+            }
+        }
+    }
+
+    // libera la memoria usada para leer las lineas
+    free(linea);
+
+    // cierra el archivo
+    fclose(archivo);
+
+    return resultado;
+}
+
+==> ./arbol_chaflaneado.c <==
+#define _POSIX_C_SOURCE 200809L
+#include "arbol_chaflaneado.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// inicializa una lista vacia
+void lista_archivos_inicializar(ListaArchivos *lista) {
+    if (!lista) return;
+    lista->cabeza = NULL;
+    lista->cola = NULL;
+    lista->cantidad = 0;
+}
+
+// agrega un archivo al final de la lista
+bool lista_archivos_agregar(ListaArchivos *lista, const char *nombre_archivo) {
+    if (!lista || !nombre_archivo) return false;
+
+    NodoArchivo *nuevo = (NodoArchivo *)malloc(sizeof(NodoArchivo));
+    if (!nuevo) return false;
+
+    nuevo->nombre_archivo = strdup(nombre_archivo);
+    if (!nuevo->nombre_archivo) {
+        free(nuevo);
+        return false;
+    }
+    nuevo->siguiente = NULL;
+
+    if (lista->cola) {
+        lista->cola->siguiente = nuevo;
+    } else {
+        lista->cabeza = nuevo;
+    }
+    lista->cola = nuevo;
+    lista->cantidad++;
+    return true;
+}
+
+// libera la memoria utilizada por la lista
+void lista_archivos_liberar(ListaArchivos *lista) {
+    if (!lista) return;
+    NodoArchivo *actual = lista->cabeza;
+    while (actual != NULL) {
+        NodoArchivo *sig = actual->siguiente;
+        free(actual->nombre_archivo);
+        free(actual);
+        actual = sig;
+    }
+    lista->cabeza = NULL;
+    lista->cola = NULL;
+    lista->cantidad = 0;
+}
+
+// realiza una rotacion hacia la derecha
+static NodoSplay *rotar_derecha(NodoSplay *x) {
+    NodoSplay *y = x->izq;
+    x->izq = y->der;
+    y->der = x;
+    return y;
+}
+
+// realiza una rotacion hacia la izquierda
+static NodoSplay *rotar_izquierda(NodoSplay *x) {
+    NodoSplay *y = x->der;
+    x->der = y->izq;
+    y->izq = x;
+    return y;
+}
+
+// busca un termino y lo mueve hacia la raiz del arbol
+// si no existe, mueve el ultimo nodo visitado
+static NodoSplay *splay_recursivo(NodoSplay *raiz, const char *termino, bool mostrar_traza) {
+    if (!raiz) return NULL;
+
+    int cmp = strcmp(termino, raiz->termino_buscado);
+    if (cmp == 0) {
+        return raiz;
+    }
+
+    // busca en el subarbol izquierdo
+    if (cmp < 0) {
+        if (!raiz->izq) return raiz;
+
+        int cmp_izq = strcmp(termino, raiz->izq->termino_buscado);
+
+        if (cmp_izq < 0) {
+            // caso zig-zig: dos rotaciones hacia la derecha
+            raiz->izq->izq = splay_recursivo(raiz->izq->izq, termino, mostrar_traza);
+            if (mostrar_traza) {
+                printf("  [Splay] Rotacion Zig-Zig (derecha doble) sobre '%s'\n",
+                       raiz->termino_buscado);
+            }
+            raiz = rotar_derecha(raiz);
+        } else if (cmp_izq > 0) {
+            // caso zig-zag: primero izquierda y luego derecha
+            raiz->izq->der = splay_recursivo(raiz->izq->der, termino, mostrar_traza);
+            if (raiz->izq->der != NULL) {
+                if (mostrar_traza) {
+                    printf("  [Splay] Rotacion Zig-Zag (izq en hijo '%s', der en '%s')\n",
+                           raiz->izq->termino_buscado, raiz->termino_buscado);
+                }
+                raiz->izq = rotar_izquierda(raiz->izq);
+            }
+        }
+
+        // realiza la rotacion final hacia la derecha
+        if (!raiz->izq) return raiz;
+        if (cmp_izq == 0 && mostrar_traza) {
+            printf("  [Splay] Rotacion Zig (derecha simple) sobre '%s'\n",
+                   raiz->termino_buscado);
+        }
+        return rotar_derecha(raiz);
+    }
+    // busca en el subarbol derecho
+    else {
+        if (!raiz->der) return raiz;
+
+        int cmp_der = strcmp(termino, raiz->der->termino_buscado);
+
+        if (cmp_der < 0) {
+            // caso zag-zig: primero derecha y luego izquierda
+            raiz->der->izq = splay_recursivo(raiz->der->izq, termino, mostrar_traza);
+            if (raiz->der->izq != NULL) {
+                if (mostrar_traza) {
+                    printf("  [Splay] Rotacion Zag-Zig (der en hijo '%s', izq en '%s')\n",
+                           raiz->der->termino_buscado, raiz->termino_buscado);
+                }
+                raiz->der = rotar_derecha(raiz->der);
+            }
+        } else if (cmp_der > 0) {
+            // caso zag-zag: dos rotaciones hacia la izquierda
+            raiz->der->der = splay_recursivo(raiz->der->der, termino, mostrar_traza);
+            if (mostrar_traza) {
+                printf("  [Splay] Rotacion Zag-Zag (izquierda doble) sobre '%s'\n",
+                       raiz->termino_buscado);
+            }
+            raiz = rotar_izquierda(raiz);
+        }
+
+        // realiza la rotacion final hacia la izquierda
+        if (!raiz->der) return raiz;
+        if (cmp_der == 0 && mostrar_traza) {
+            printf("  [Splay] Rotacion Zag (izquierda simple) sobre '%s'\n",
+                   raiz->termino_buscado);
+        }
+        return rotar_izquierda(raiz);
+    }
+}
+
+// crea un nuevo nodo y guarda los resultados de la busqueda
+static NodoSplay *crear_nodo_splay(const char *termino, ListaArchivos *resultados) {
+    NodoSplay *nuevo = (NodoSplay *)malloc(sizeof(NodoSplay));
+    if (!nuevo) return NULL;
+
+    nuevo->termino_buscado = strdup(termino);
+    if (!nuevo->termino_buscado) {
+        free(nuevo);
+        return NULL;
+    }
+
+    if (resultados) {
+        nuevo->resultados = *resultados;
+        lista_archivos_inicializar(resultados);
+    } else {
+        lista_archivos_inicializar(&nuevo->resultados);
+    }
+
+    nuevo->accesos = 1;
+    nuevo->izq = NULL;
+    nuevo->der = NULL;
+    return nuevo;
+}
+
+// muestra los nodos del arbol y sus resultados
+static void imprimir_recursivo(const NodoSplay *nodo, int nivel) {
+    if (!nodo) return;
+
+    imprimir_recursivo(nodo->der, nivel + 1);
+
+    for (int i = 0; i < nivel; i++) {
+        printf("    ");
+    }
+    printf("|-- \"%s\" (libros: %zu, accesos: %zu)%s\n",
+           nodo->termino_buscado,
+           nodo->resultados.cantidad,
+           nodo->accesos,
+           (nivel == 0) ? "  <-- [RAIZ]" : "");
+
+    imprimir_recursivo(nodo->izq, nivel + 1);
+}
+
+// libera la memoria de todos los nodos del arbol
+static void destruir_recursivo(NodoSplay *nodo) {
+    if (!nodo) return;
+    destruir_recursivo(nodo->izq);
+    destruir_recursivo(nodo->der);
+    free(nodo->termino_buscado);
+    lista_archivos_liberar(&nodo->resultados);
+    free(nodo);
+}
+
+// crea un arbol chaflaneado vacio
+ArbolChaflaneado *splay_crear(void) {
+    ArbolChaflaneado *arbol = (ArbolChaflaneado *)malloc(sizeof(ArbolChaflaneado));
+    if (!arbol) return NULL;
+    arbol->raiz = NULL;
+    arbol->total_nodos = 0;
+    return arbol;
+}
+
+// busca un termino en el arbol y lo mueve hacia la raiz
+NodoSplay *splay_buscar(ArbolChaflaneado *arbol, const char *termino, bool mostrar_traza) {
+    if (!arbol || !termino || !arbol->raiz) return NULL;
+
+    if (mostrar_traza) {
+        printf("[Splay] Ejecutando chaflaneo para termino: \"%s\"\n", termino);
+    }
+
+    arbol->raiz = splay_recursivo(arbol->raiz, termino, mostrar_traza);
+
+    if (arbol->raiz && strcmp(arbol->raiz->termino_buscado, termino) == 0) {
+        arbol->raiz->accesos++;
+        return arbol->raiz;
+    }
+
+    return NULL;
+}
+
+// inserta un termino nuevo y lo coloca en la raiz
+NodoSplay *splay_insertar(ArbolChaflaneado *arbol,
+                          const char *termino,
+                          ListaArchivos *resultados,
+                          bool mostrar_traza) {
+    if (!arbol || !termino) return NULL;
+
+    // si el arbol esta vacio, el nuevo nodo se convierte en la raiz
+    if (!arbol->raiz) {
+        NodoSplay *nuevo = crear_nodo_splay(termino, resultados);
+        if (nuevo) {
+            arbol->raiz = nuevo;
+            arbol->total_nodos++;
+        }
+        return nuevo;
+    }
+
+    // mueve el termino mas cercano a la raiz antes de insertar
+    arbol->raiz = splay_recursivo(arbol->raiz, termino, mostrar_traza);
+
+    int cmp = strcmp(termino, arbol->raiz->termino_buscado);
+    if (cmp == 0) {
+        // si el termino ya existe, actualiza sus resultados
+        arbol->raiz->accesos++;
+        if (resultados) {
+            lista_archivos_liberar(&arbol->raiz->resultados);
+            arbol->raiz->resultados = *resultados;
+            lista_archivos_inicializar(resultados);
+        }
+        return arbol->raiz;
+    }
+
+    NodoSplay *nuevo = crear_nodo_splay(termino, resultados);
+    if (!nuevo) return NULL;
+
+    if (cmp < 0) {
+        nuevo->der = arbol->raiz;
+        nuevo->izq = arbol->raiz->izq;
+        arbol->raiz->izq = NULL;
+    } else {
+        nuevo->izq = arbol->raiz;
+        nuevo->der = arbol->raiz->der;
+        arbol->raiz->der = NULL;
+    }
+
+    arbol->raiz = nuevo;
+    arbol->total_nodos++;
+    return nuevo;
+}
+
+// muestra el estado actual del arbol chaflaneado
+void splay_imprimir_arbol(const ArbolChaflaneado *arbol) {
+    printf("\n=== Estado del Arbol Chaflaneado (Cache de Busquedas) ===\n");
+    if (!arbol || !arbol->raiz) {
+        printf("(Arbol vacio)\n");
+        printf("=========================================================\n");
+        return;
+    }
+    printf("Total de terminos en cache: %zu\n\n", arbol->total_nodos);
+    imprimir_recursivo(arbol->raiz, 0);
+    printf("=========================================================\n");
+}
+
+// libera toda la memoria utilizada por el arbol
+void splay_destruir(ArbolChaflaneado *arbol) {
+    if (!arbol) return;
+    destruir_recursivo(arbol->raiz);
+    free(arbol);
+}
+==> ./sociedad.c <==
+
+#include "sociedad.h"
+#include "listas.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// hace una copia del nombre para guardarlo en memoria
+char *copiar_texto(const char *texto) {
+    char *copia = malloc(strlen(texto) + 1);
+
+    if (copia == NULL) {
+        return NULL;
+    }
+
+    strcpy(copia, texto);
+    return copia;
+}
+
+// agrega una persona a la lista
+int agregar_persona(struct Sociedad *sociedad, const char *nombre) {
+    struct Persona *nueva = malloc(sizeof(struct Persona));
+
+    if (nueva == NULL) {
+        return 0;
+    }
+
+    nueva->nombre = copiar_texto(nombre);
+
+    if (nueva->nombre == NULL) {
+        free(nueva);
+        return 0;
+    }
+
+    nueva->comunaActual = NULL;
+    nueva->librosLeidos = NULL;
+    nueva->servicios = NULL;
+    nueva->regalosDados = 0;
+    nueva->regalosRecibidos = 0;
+    nueva->siguiente = NULL;
+
+    if (sociedad->personas == NULL) {
+        sociedad->personas = nueva;
+    } else {
+        struct Persona *actual = sociedad->personas;
+
+        while (actual->siguiente != NULL) {
+            actual = actual->siguiente;
+        }
+
+        actual->siguiente = nueva;
+    }
+
+    return 1;
+}
+
+int persona_aprender_servicio(struct Persona *p, const char *servicio) {
+    struct ServicioPersona *actual = p->servicios;
+    struct ServicioPersona *nuevo;
+
+    // si ya lo sabe, no lo repetimos
+    while (actual != NULL) {
+        if (strcmp(actual->nombre, servicio) == 0) {
+            return 0;
+        }
+        actual = actual->siguiente;
+    }
+
+    nuevo = malloc(sizeof(struct ServicioPersona));
+
+    if (nuevo == NULL) {
+        return 0;
+    }
+
+    nuevo->nombre = copiar_texto(servicio);
+
+    if (nuevo->nombre == NULL) {
+        free(nuevo);
+        return 0;
+    }
+
+    // se inserta al inicio, es lo mas simple
+    nuevo->siguiente = p->servicios;
+    p->servicios = nuevo;
+    return 1;
+}
+
+int registrar_libro_leido(struct Persona *p, const char *nombreArchivo) {
+    struct LibroLeido *actual = p->librosLeidos;
+    struct LibroLeido *nuevo;
+
+    // si ya lo leyo, no se repite
+    while (actual != NULL) {
+        if (strcmp(actual->nombreArchivo, nombreArchivo) == 0) {
+            return 0;
+        }
+        actual = actual->siguiente;
+    }
+
+    nuevo = malloc(sizeof(struct LibroLeido));
+
+    if (nuevo == NULL) {
+        return 0;
+    }
+
+    nuevo->nombreArchivo = copiar_texto(nombreArchivo);
+
+    if (nuevo->nombreArchivo == NULL) {
+        free(nuevo);
+        return 0;
+    }
+
+    nuevo->siguiente = p->librosLeidos;
+    p->librosLeidos = nuevo;
+    return 1;
+}
+
+int contar_libros_leidos(const struct Persona *p) {
+    const struct LibroLeido *libro = p->librosLeidos;
+    int total = 0;
+
+    while (libro != NULL) {
+        total++;
+        libro = libro->siguiente;
+    }
+
+    return total;
+}
+
+int aprender_servicio_leyendo(struct Persona *p, const char *servicio) {
+    struct Existencia *e;
+    struct LibroLeido *libro;
+
+    if (contar_libros_leidos(p) < 3) {
+        return 0;
+    }
+
+    // devuelve 0 si ya lo sabia
+    if (!persona_aprender_servicio(p, servicio)) {
+        return 0;
+    }
+
+    // el stock de ese servicio crece en su comuna
+    e = p->comunaActual->servicios;
+
+    while (e != NULL) {
+        if (strcmp(e->nombre, servicio) == 0) {
+            e->maximo += 2;
+            e->cantidad += 2;
+        }
+        e = e->siguiente;
+    }
+
+    // gasta los libros: para otro servicio necesita leer 3 nuevos
+    while (p->librosLeidos != NULL) {
+        libro = p->librosLeidos;
+        p->librosLeidos = libro->siguiente;
+        free(libro->nombreArchivo);
+        free(libro);
+    }
+
+    return 1;
+}
+
+// agrega un bien al catalogo de bienes
+int agregar_bien(struct Sociedad *sociedad, const char *nombre) {
+    struct NodoNombreDoble *nuevo = malloc(sizeof(struct NodoNombreDoble));
+
+    if (nuevo == NULL) {
+        return 0;
+    }
+
+    nuevo->nombre = copiar_texto(nombre);
+
+    if (nuevo->nombre == NULL) {
+        free(nuevo);
+        return 0;
+    }
+
+    nuevo->anterior = NULL;
+    nuevo->siguiente = NULL;
+
+    if (sociedad->catalogoBienes == NULL) {
+        sociedad->catalogoBienes = nuevo;
+    } else {
+        struct NodoNombreDoble *actual = sociedad->catalogoBienes;
+
+        while (actual->siguiente != NULL) {
+            actual = actual->siguiente;
+        }
+
+        actual->siguiente = nuevo;
+        nuevo->anterior = actual;
+    }
+
+    return 1;
+}
+
+// agrega un servicio al catalogo de servicios
+int agregar_servicio(struct Sociedad *sociedad, const char *nombre) {
+    struct NodoNombre *nuevo = malloc(sizeof(struct NodoNombre));
+
+    if (nuevo == NULL) {
+        return 0;
+    }
+
+    nuevo->nombre = copiar_texto(nombre);
+
+    if (nuevo->nombre == NULL) {
+        free(nuevo);
+        return 0;
+    }
+
+    nuevo->siguiente = NULL;
+
+    if (sociedad->catalogoServicios == NULL) {
+        sociedad->catalogoServicios = nuevo;
+    } else {
+        struct NodoNombre *actual = sociedad->catalogoServicios;
+
+        while (actual->siguiente != NULL) {
+            actual = actual->siguiente;
+        }
+
+        actual->siguiente = nuevo;
+    }
+
+    return 1;
+}
+
+// calcula la reciprocidad de una comuna: 100 = dados y recibidos equilibrados
+void calcular_reciprocidad_comuna(struct Sociedad *sociedad,
+                                  struct Comuna *comuna) {
+    int dados = 0;
+    int recibidos = 0;
+    struct Persona *p = sociedad->personas;
+
+    while (p != NULL) {
+        if (p->comunaActual == comuna) {
+            dados += p->regalosDados;
+            recibidos += p->regalosRecibidos;
+        }
+        p = p->siguiente;
+    }
+
+        int diferencia = dados - recibidos;
+    int limite = comuna->poblacion / 10;
+
+    if (diferencia < 0) {
+        diferencia = -diferencia;
+    }
+
+    if (limite < 1) {
+        limite = 1;
+    }
+
+    comuna->reciprocidad = 100.0f - 100.0f * diferencia / limite;
+
+    if (comuna->reciprocidad < 0) {
+        comuna->reciprocidad = 0;
+    }
+}
+
+
+ // agrega una comuna y guarda su nombre en la lista doble
+int agregar_comuna(struct Sociedad *sociedad, const char *nombre) {
+    struct Comuna *nueva = malloc(sizeof(struct Comuna));
+    struct NodoNombreDoble *nuevoNombre;
+
+    if (nueva == NULL) {
+        return 0;
+    }
+
+    nueva->nombre = copiar_texto(nombre);
+
+    if (nueva->nombre == NULL) {
+        free(nueva);
+        return 0;
+    }
+
+    // inicializa los datos de la comuna
+    nueva->poblacion = 0;
+    nueva->bienes = NULL;
+    nueva->servicios = NULL;
+    nueva->necesidad = 0;
+    nueva->satisfaccion = 0;
+    nueva->penalizacionEmergencia = 0;
+    nueva->reciprocidad = 100;
+    nueva->administrada = 0;
+    nueva->anterior = NULL;
+    nueva->siguiente = NULL;
+    nueva->biblioteca = NULL;
+    
+    // reserva memoria para guardar tambien el nombre
+    nuevoNombre = malloc(sizeof(struct NodoNombreDoble));
+
+    if (nuevoNombre == NULL) {
+        free(nueva->nombre);
+        free(nueva);
+        return 0;
+    }
+
+    nuevoNombre->nombre = copiar_texto(nombre);
+
+    if (nuevoNombre->nombre == NULL) {
+        free(nuevoNombre);
+        free(nueva->nombre);
+        free(nueva);
+        return 0;
+    }
+
+    nuevoNombre->anterior = NULL;
+    nuevoNombre->siguiente = NULL;
+
+    // agrega la comuna a la lista principal
+    if (sociedad->comunas == NULL) {
+        sociedad->comunas = nueva;
+    } else {
+        struct Comuna *actual = sociedad->comunas;
+
+        while (actual->siguiente != NULL) {
+            actual = actual->siguiente;
+        }
+
+        actual->siguiente = nueva;
+        nueva->anterior = actual;
+    }
+
+    // agrega el nombre a la lista doble
+    if (sociedad->nombresComunas == NULL) {
+        sociedad->nombresComunas = nuevoNombre;
+    } else {
+        struct NodoNombreDoble *actual = sociedad->nombresComunas;
+
+        while (actual->siguiente != NULL) {
+            actual = actual->siguiente;
+        }
+
+        actual->siguiente = nuevoNombre;
+        nuevoNombre->anterior = actual;
+    }
+
+    return 1;
+}
+
+
+
+// agrega un bien o servicio a las existencias de una comuna
+int agregar_existencia(struct Existencia **lista, const char *nombre,
+                       int maximo) {
+    struct Existencia *nuevo = malloc(sizeof(struct Existencia));
+
+    if (nuevo == NULL) {
+        return 0;
+    }
+
+    nuevo->nombre = copiar_texto(nombre);
+
+    if (nuevo->nombre == NULL) {
+        free(nuevo);
+        return 0;
+    }
+
+    nuevo->maximo = maximo;
+    nuevo->cantidad = maximo * 4 / 5;
+    nuevo->valor = 1.0f;
+    nuevo->siguiente = NULL;
+
+    if (*lista == NULL) {
+        *lista = nuevo;
+    } else {
+        struct Existencia *actual = *lista;
+
+        while (actual->siguiente != NULL) {
+            actual = actual->siguiente;
+        }
+
+        actual->siguiente = nuevo;
+    }
+
+    return 1;
+}
+
+// crea las existencias de una comuna
+int crear_existencias_comuna(struct Sociedad *sociedad,
+                             struct Comuna *comuna) {
+    struct NodoNombreDoble *bien = sociedad->catalogoBienes;
+    struct NodoNombre *servicio = sociedad->catalogoServicios;
+    int i;
+
+    for (i = 0; i < sociedad->cantidadBienesActivos; i++) {
+        if (bien == NULL) {
+            return 0;
+        }
+
+        if (!agregar_existencia(&comuna->bienes, bien->nombre,
+                                comuna->poblacion * 5)) {
+            return 0;
+        }
+
+        bien = bien->siguiente;
+    }
+
+    for (i = 0; i < sociedad->cantidadServiciosActivos; i++) {
+        if (servicio == NULL) {
+            return 0;
+        }
+
+        if (!agregar_existencia(&comuna->servicios, servicio->nombre,
+                                comuna->poblacion * 2)) {
+            return 0;
+        }
+
+        servicio = servicio->siguiente;
+    }
+
+    return 1;
+}
+
+// calcula la necesidad y la satisfaccion de una comuna
+void calcular_indices_comuna(struct Comuna *comuna) {
+    struct Existencia *actual;
+    int maximoTotal = 0;
+    int cantidadTotal = 0;
+
+    if (comuna == NULL) {
+        return;
+    }
+
+    actual = comuna->bienes;
+    while (actual != NULL) {
+        maximoTotal += actual->maximo;
+        cantidadTotal += actual->cantidad;
+        actual = actual->siguiente;
+    }
+
+    actual = comuna->servicios;
+    while (actual != NULL) {
+        maximoTotal += actual->maximo;
+        cantidadTotal += actual->cantidad;
+        actual = actual->siguiente;
+    }
+
+    if (maximoTotal > 0) {
+        comuna->necesidad =
+            100.0f * (maximoTotal - cantidadTotal) / maximoTotal;
+    } else {
+        comuna->necesidad = 0;
+    }
+
+    if (comuna->necesidad < 0) {
+        comuna->necesidad = 0;
+    }
+
+    if (comuna->necesidad >= 100) {
+        comuna->necesidad = 99.9f;
+    }
+
+    comuna->satisfaccion =
+    100.0f - comuna->necesidad
+    - comuna->penalizacionEmergencia;
+
+    if (comuna->satisfaccion < 0) {
+        comuna->satisfaccion = 0;
+    }
+}
+
+
+// calcula los indices de todas las comunas y mezcla la satisfaccion con la de las cercanas
+void calcular_indices_sociedad(struct Sociedad *sociedad) {
+    struct Comuna *actual;
+    struct Comuna *vecina;
+    float bienestarBase[50];
+    int cantidad = 0;
+    int i;
+    int j;
+
+    if (sociedad == NULL) {
+        return;
+    }
+
+    actual = sociedad->comunas;
+
+    // calcula los indices propios de cada comuna
+    while (actual != NULL && cantidad < 50) {
+        calcular_indices_comuna(actual);
+
+        bienestarBase[cantidad] =
+            100.0f - actual->necesidad
+            - actual->penalizacionEmergencia;
+
+        if (bienestarBase[cantidad] < 0) {
+            bienestarBase[cantidad] = 0;
+        }
+
+        if (bienestarBase[cantidad] > 100) {
+            bienestarBase[cantidad] = 100;
+        }
+
+        actual = actual->siguiente;
+        cantidad++;
+    }
+
+    // combina el bienestar propio con el de las comunas cercanas
+    actual = sociedad->comunas;
+
+    for (i = 0; actual != NULL && i < cantidad; i++) {
+        float sumaVecinas = 0;
+        int cantidadVecinas = 0;
+        calcular_reciprocidad_comuna(sociedad, actual);
+
+        vecina = sociedad->comunas;
+
+        for (j = 0; vecina != NULL && j < cantidad; j++) {
+            int distancia = i - j;
+
+            if (distancia < 0) {
+                distancia = -distancia;
+            }
+
+            if (distancia >= 1 && distancia <= 2) {
+                sumaVecinas += bienestarBase[j];
+                cantidadVecinas++;
+            }
+
+            vecina = vecina->siguiente;
+        }
+
+        if (cantidadVecinas > 0) {
+			float bienestarPropio = bienestarBase[i];
+			float promedioVecinas = sumaVecinas / cantidadVecinas;
+
+			actual->satisfaccion =
+			0.6f * bienestarPropio
+			+ 0.25f * promedioVecinas
+			+ 0.15f * actual->reciprocidad;
+			} else {
+			actual->satisfaccion =
+			0.85f * bienestarBase[i]
+			+ 0.15f * actual->reciprocidad;
+		}
+
+        if (actual->satisfaccion < 0) {
+            actual->satisfaccion = 0;
+        }
+
+        if (actual->satisfaccion > 100) {
+            actual->satisfaccion = 100;
+        }
+
+        actual = actual->siguiente;
+    }
+}
+
+// carga los datos iniciales de la sociedad
+int inicializar_sociedad(struct Sociedad *sociedad,
+                         const char *archivoPersonas,
+                         const char *archivoComunas,
+                         const char *archivoBienes,
+                         const char *archivoServicios) {
+
+    // deja la sociedad vacia antes de empezar
+    sociedad->poblacionTotal = 0;
+    sociedad->cantidadComunas = 0;
+    sociedad->cantidadBienesActivos = 0;
+    sociedad->cantidadServiciosActivos = 0;
+    sociedad->dia = 0;
+    sociedad->diasParaEmergencia = (rand() % 5) + 3;
+
+    sociedad->personas = NULL;
+    sociedad->catalogoServicios = NULL;
+    sociedad->catalogoBienes = NULL;
+    sociedad->nombresComunas = NULL;
+    sociedad->comunas = NULL;
+
+    // listas temporales para leer los archivos
+    Lista personas;
+    Lista comunas;
+    Lista bienes;
+    Lista servicios;
+
+    inicializar_lista(&personas);
+    inicializar_lista(&comunas);
+    inicializar_lista(&bienes);
+    inicializar_lista(&servicios);
+
+    // lee los cuatro archivos
+    if (!cargar_archivo(archivoPersonas, &personas) ||
+        !cargar_archivo(archivoComunas, &comunas) ||
+        !cargar_archivo(archivoBienes, &bienes) ||
+        !cargar_archivo(archivoServicios, &servicios)) {
+
+        liberar_lista(&personas);
+        liberar_lista(&comunas);
+        liberar_lista(&bienes);
+        liberar_lista(&servicios);
+        return 0;
+    }
+
+    // copia los nombres de las personas
+    Nodo *actual = personas.inicio;
+
+    while (actual != NULL) {
+        if (!agregar_persona(sociedad, actual->nombre)) {
+            liberar_lista(&personas);
+            liberar_lista(&comunas);
+            liberar_lista(&bienes);
+            liberar_lista(&servicios);
+            liberar_sociedad(sociedad);
+            return 0;
+        }
+
+        sociedad->poblacionTotal++;
+        actual = actual->siguiente;
+    }
+
+    // crea las comunas
+    
+    int comunasActivas;
+    int bienesActivos;
+    int serviciosActivos;
+
+    printf("Cantidad de comunas activas (3-%d): ",
+           comunas.cantidad);
+
+    if (scanf("%d", &comunasActivas) != 1 ||
+        comunasActivas < 3 ||
+        comunasActivas > comunas.cantidad) {
+        printf("Cantidad de comunas no valida\n");
+        liberar_lista(&personas);
+        liberar_lista(&comunas);
+        liberar_lista(&bienes);
+        liberar_lista(&servicios);
+        liberar_sociedad(sociedad);
+        return 0;
+    }
+
+    printf("Cantidad de bienes activos (1-%d): ",
+           bienes.cantidad);
+
+    if (scanf("%d", &bienesActivos) != 1 ||
+        bienesActivos < 1 ||
+        bienesActivos > bienes.cantidad) {
+        printf("Cantidad de bienes no valida\n");
+        liberar_lista(&personas);
+        liberar_lista(&comunas);
+        liberar_lista(&bienes);
+        liberar_lista(&servicios);
+        liberar_sociedad(sociedad);
+        return 0;
+    }
+
+    printf("Cantidad de servicios activos (1-%d): ",
+           servicios.cantidad);
+
+    if (scanf("%d", &serviciosActivos) != 1 ||
+        serviciosActivos < 1 ||
+        serviciosActivos > servicios.cantidad) {
+        printf("Cantidad de servicios no valida\n");
+        liberar_lista(&personas);
+        liberar_lista(&comunas);
+        liberar_lista(&bienes);
+        liberar_lista(&servicios);
+        liberar_sociedad(sociedad);
+        return 0;
+    }
+
+    sociedad->cantidadBienesActivos = bienesActivos;
+    sociedad->cantidadServiciosActivos = serviciosActivos;
+
+    // copia los bienes del catalogo
+    actual = bienes.inicio;
+
+    while (actual != NULL) {
+        if (!agregar_bien(sociedad, actual->nombre)) {
+            liberar_lista(&personas);
+            liberar_lista(&comunas);
+            liberar_lista(&bienes);
+            liberar_lista(&servicios);
+            liberar_sociedad(sociedad);
+            return 0;
+        }
+
+        actual = actual->siguiente;
+    }
+
+    // copia los servicios del catalogo
+    actual = servicios.inicio;
+
+    while (actual != NULL) {
+        if (!agregar_servicio(sociedad, actual->nombre)) {
+            liberar_lista(&personas);
+            liberar_lista(&comunas);
+            liberar_lista(&bienes);
+            liberar_lista(&servicios);
+            liberar_sociedad(sociedad);
+            return 0;
+        }
+
+        actual = actual->siguiente;
+    }
+
+    // crea solamente las comunas seleccionadas
+    actual = comunas.inicio;
+
+    while (actual != NULL && sociedad->cantidadComunas <
+                              comunasActivas) {
+        if (!agregar_comuna(sociedad, actual->nombre)) {
+            liberar_lista(&personas);
+            liberar_lista(&comunas);
+            liberar_lista(&bienes);
+            liberar_lista(&servicios);
+            liberar_sociedad(sociedad);
+            return 0;
+        }
+
+        sociedad->cantidadComunas++;
+        actual = actual->siguiente;
+    }
+
+    // reparte la poblacion entre las comunas
+    struct Comuna *comunaActual = sociedad->comunas;
+    int poblacionBase = sociedad->poblacionTotal / comunasActivas;
+    int personasExtra = sociedad->poblacionTotal % comunasActivas;
+    int numeroComuna = 0;
+    struct Persona *personaAsignar = sociedad->personas;
+
+    while (comunaActual != NULL) {
+        comunaActual->poblacion = poblacionBase;
+        comunaActual->administrada = (numeroComuna < 3);
+
+        if (numeroComuna < personasExtra) {
+            comunaActual->poblacion++;
+        }
+        
+        // asigna a esta comuna las siguientes personas de la lista
+		for (int i = 0; i < comunaActual->poblacion; i++) {
+		personaAsignar->comunaActual = comunaActual;
+		personaAsignar = personaAsignar->siguiente;
+		}
+
+        if (!crear_existencias_comuna(sociedad, comunaActual)) {
+            liberar_lista(&personas);
+            liberar_lista(&comunas);
+            liberar_lista(&bienes);
+            liberar_lista(&servicios);
+            liberar_sociedad(sociedad);
+            return 0;
+        }
+
+        calcular_indices_comuna(comunaActual);
+
+        numeroComuna++;
+        comunaActual = comunaActual->siguiente;
+    }
+
+
+    // libera las listas temporales porque ya copiamos los datos
+    liberar_lista(&personas);
+    liberar_lista(&comunas);
+    liberar_lista(&bienes);
+    liberar_lista(&servicios);
+	// asigna servicios iniciales a las personas (0, 1 o 2)
+	struct Persona *personaServ = sociedad->personas;
+
+	while (personaServ != NULL) {
+		int cantidadServicios = rand() % 3;
+
+		for (int k = 0; k < cantidadServicios; k++) {
+			struct NodoNombre *servicio = sociedad->catalogoServicios;
+			int posicion = rand() % sociedad->cantidadServiciosActivos;
+
+			for (int j = 0; j < posicion; j++) {
+				servicio = servicio->siguiente;
+			}
+
+			persona_aprender_servicio(personaServ, servicio->nombre);
+		}	
+
+		personaServ = personaServ->siguiente;
+	}
+    return 1;
+}
+
+// construye el AVL compartido y crea la biblioteca de cada comuna
+int crear_bibliotecas(struct Sociedad *sociedad, const char *rutaCorpus) {
+    struct Comuna *comuna;
+
+    sociedad->indiceLibros = biblioteca_construir_indice_avl(rutaCorpus);
+
+    if (sociedad->indiceLibros == NULL) {
+        return 0;
+    }
+
+    comuna = sociedad->comunas;
+
+    while (comuna != NULL) {
+        comuna->biblioteca = biblioteca_crear_con_indice(
+            comuna->nombre, sociedad->indiceLibros);
+
+        if (comuna->biblioteca == NULL) {
+            return 0;
+        }
+
+        comuna = comuna->siguiente;
+    }
+
+    return 1;
+}
+
+// libera una lista de existencias
+void liberar_existencias(struct Existencia *lista) {
+    struct Existencia *actual;
+
+    while (lista != NULL) {
+        actual = lista;
+        lista = lista->siguiente;
+
+        free(actual->nombre);
+        free(actual);
+    }
+}
+// disuelve una comuna: sus personas se mudan a la comuna con mas satisfaccion
+// los servicios viajan con las personas y los bienes se pierden
+int disolver_comuna(struct Sociedad *sociedad, struct Comuna *comuna) {
+    struct Comuna *destino = NULL;
+    struct Comuna *actual = sociedad->comunas;
+    struct Persona *p;
+
+    // busca la comuna destino: la de mayor satisfaccion que no sea la disuelta
+    while (actual != NULL) {
+        if (actual != comuna &&
+            (destino == NULL || actual->satisfaccion > destino->satisfaccion)) {
+            destino = actual;
+        }
+        actual = actual->siguiente;
+    }
+
+    if (destino == NULL) {
+        return 0;
+    }
+
+    printf("La comuna %s se disuelve. Sus personas se mudan a %s.\n",
+           comuna->nombre, destino->nombre);
+
+    // muda a las personas de la comuna
+    p = sociedad->personas;
+
+    while (p != NULL) {
+        if (p->comunaActual == comuna) {
+            struct ServicioPersona *s = p->servicios;
+
+            p->comunaActual = destino;
+            destino->poblacion++;
+
+            // sus servicios viajan con ella: sube el stock del destino
+            while (s != NULL) {
+                struct Existencia *e = destino->servicios;
+
+                while (e != NULL) {
+                    if (strcmp(e->nombre, s->nombre) == 0) {
+                        e->maximo += 2;
+                        e->cantidad += 2;
+                    }
+                    e = e->siguiente;
+                }
+                s = s->siguiente;
+            }
+        }
+        p = p->siguiente;
+    }
+
+	// si era administrada, una autonoma ocupa su lugar
+	if (comuna->administrada) {
+		actual = sociedad->comunas;
+
+		while (actual != NULL) {
+			if (actual != comuna && actual->administrada == 0) {
+				actual->administrada = 1;
+				printf("La comuna %s pasa a ser administrada.\n",
+					actual->nombre);
+				break;
+			}
+			actual = actual->siguiente;
+		}
+}
+
+    // saca la comuna de la lista
+    if (comuna->anterior != NULL) {
+        comuna->anterior->siguiente = comuna->siguiente;
+    } else {
+        sociedad->comunas = comuna->siguiente;
+    }
+
+    if (comuna->siguiente != NULL) {
+        comuna->siguiente->anterior = comuna->anterior;
+    }
+	// la caché y la biblioteca de la comuna se pierden con ella
+	if (comuna->biblioteca != NULL) {
+		biblioteca_destruir(comuna->biblioteca);
+	}
+    // los bienes se pierden y se libera la comuna
+    liberar_existencias(comuna->bienes);
+    liberar_existencias(comuna->servicios);
+    free(comuna->nombre);
+    free(comuna);
+    sociedad->cantidadComunas--;
+
+    return 1;
+}
+
+// disuelve las comunas con necesidad muy alta o satisfaccion muy baja
+void revisar_disoluciones(struct Sociedad *sociedad) {
+    struct Comuna *actual = sociedad->comunas;
+    struct Comuna *siguiente;
+
+    while (actual != NULL) {
+        // se guarda antes porque "actual" puede liberarse
+        siguiente = actual->siguiente;
+
+        if (actual->necesidad >= UMBRAL_NECESIDAD ||
+            actual->satisfaccion <= UMBRAL_SATISFACCION) {
+            disolver_comuna(sociedad, actual);
+        }
+
+        actual = siguiente;
+    }
+}
+// libera toda la memoria de la sociedad
+void liberar_sociedad(struct Sociedad *sociedad) {
+    struct NodoNombre *persona;
+    struct NodoNombreDoble *bien;
+    struct NodoNombreDoble *nombreComuna;
+    struct Comuna *comuna;
+    struct Persona *personaActual;
+
+    while (sociedad->personas != NULL) {
+        personaActual = sociedad->personas;
+        sociedad->personas = personaActual->siguiente;
+		
+		while (personaActual->servicios != NULL) {
+			struct ServicioPersona *serv = personaActual->servicios;
+			personaActual->servicios = serv->siguiente;
+			free(serv->nombre);
+			free(serv);
+		}
+		while (personaActual->librosLeidos != NULL) {
+			struct LibroLeido *libro = personaActual->librosLeidos;
+			personaActual->librosLeidos = libro->siguiente;
+			free(libro->nombreArchivo);
+			free(libro);
+}
+        free(personaActual->nombre);
+        free(personaActual);
+    }
+
+    while (sociedad->catalogoServicios != NULL) {
+        persona = sociedad->catalogoServicios;
+        sociedad->catalogoServicios = persona->siguiente;
+
+        free(persona->nombre);
+        free(persona);
+    }
+
+    while (sociedad->catalogoBienes != NULL) {
+        bien = sociedad->catalogoBienes;
+        sociedad->catalogoBienes = bien->siguiente;
+
+        free(bien->nombre);
+        free(bien);
+    }
+
+    while (sociedad->nombresComunas != NULL) {
+        nombreComuna = sociedad->nombresComunas;
+        sociedad->nombresComunas = nombreComuna->siguiente;
+
+        free(nombreComuna->nombre);
+        free(nombreComuna);
+    }
+
+    while (sociedad->comunas != NULL) {
+        comuna = sociedad->comunas;
+        sociedad->comunas = comuna->siguiente;
+        if (comuna->biblioteca != NULL) {
+			biblioteca_destruir(comuna->biblioteca);
+		}
+        liberar_existencias(comuna->bienes);
+        liberar_existencias(comuna->servicios);
+
+        free(comuna->nombre);
+        free(comuna);
+    }
+    
+    if (sociedad->indiceLibros != NULL) {
+		avl_destruir(sociedad->indiceLibros);
+		sociedad->indiceLibros = NULL;
+	}
+}
+
+==> ./arbol_chaflaneado.h <==
+#ifndef ARBOL_CHAFLANEADO_H
+#define ARBOL_CHAFLANEADO_H
+
+#include <stdbool.h>
+#include <stddef.h>
+
+// nodo de la lista que guarda los archivos donde se encontro un texto
+typedef struct NodoArchivo {
+    char *nombre_archivo;
+    struct NodoArchivo *siguiente;
+} NodoArchivo;
+
+// lista de archivos encontrados en una busqueda
+typedef struct ListaArchivos {
+    NodoArchivo *cabeza;
+    NodoArchivo *cola;
+    size_t cantidad;
+} ListaArchivos;
+
+// nodo del arbol chaflaneado
+typedef struct NodoSplay {
+    char *termino_buscado;       // texto que se busca en el arbol
+    ListaArchivos resultados;    // archivos donde aparece el texto
+    size_t accesos;              // cantidad de veces que se ha buscado el texto
+    struct NodoSplay *izq;
+    struct NodoSplay *der;
+} NodoSplay;
+
+// estructura principal del arbol chaflaneado
+typedef struct ArbolChaflaneado {
+    NodoSplay *raiz;
+    size_t total_nodos;
+} ArbolChaflaneado;
+
+// inicializa una lista de archivos vacia
+void lista_archivos_inicializar(ListaArchivos *lista);
+
+// agrega un archivo a la lista
+bool lista_archivos_agregar(ListaArchivos *lista, const char *nombre_archivo);
+
+// libera la memoria utilizada por la lista
+void lista_archivos_liberar(ListaArchivos *lista);
+
+// crea un arbol chaflaneado vacio
+ArbolChaflaneado *splay_crear(void);
+
+// busca un termino en el arbol y lo mueve hacia la raiz
+// si no existe, mueve el ultimo nodo visitado
+// permite mostrar los movimientos del arbol en consola
+// retorna el nodo encontrado o NULL si no existe
+NodoSplay *splay_buscar(ArbolChaflaneado *arbol, const char *termino, bool mostrar_traza);
+
+// inserta un nuevo termino en el arbol y lo coloca en la raiz
+// tambien guarda la lista de archivos donde se encontro
+// retorna el nodo insertado o actualizado
+NodoSplay *splay_insertar(ArbolChaflaneado *arbol,
+                          const char *termino,
+                          ListaArchivos *resultados,
+                          bool mostrar_traza);
+
+// muestra la estructura del arbol chaflaneado en consola
+void splay_imprimir_arbol(const ArbolChaflaneado *arbol);
+
+// libera la memoria utilizada por el arbol y sus listas
+void splay_destruir(ArbolChaflaneado *arbol);
+
+#endif /* ARBOL_CHAFLANEADO_H */
+==> ./economia.c <==
+
+#include <stdio.h>
+#include <string.h>
+#include "economia.h"
+
+// Busca un bien en la lista de existencias
+static struct Existencia *buscar_bien(
+    struct Existencia *lista, const char *nombre) {
+
+    while (lista != NULL) {
+        if (strcmp(lista->nombre, nombre) == 0) {
+            return lista;
+        }
+
+        lista = lista->siguiente;
+    }
+
+    return NULL;
+}
+
+// Realiza un intercambio de bienes entre dos comunas
+int realizar_trueque(struct Comuna *origen,
+                     struct Comuna *destino,
+                     const char *bienOrigen,
+                     const char *bienDestino,
+                     int cantidad) {
+
+    struct Existencia *entregaOrigen;
+    struct Existencia *entregaDestino;
+    struct Existencia *recibeOrigen;
+    struct Existencia *recibeDestino;
+
+    // Valida los datos del trueque
+    if (origen == NULL || destino == NULL ||
+        bienOrigen == NULL || bienDestino == NULL ||
+        origen == destino || cantidad <= 0 ||
+        strcmp(bienOrigen, bienDestino) == 0) {
+        printf("Datos del trueque no validos.\n");
+        return 0;
+    }
+
+    // Busca los bienes que se van a intercambiar
+    entregaOrigen = buscar_bien(origen->bienes, bienOrigen);
+    entregaDestino = buscar_bien(destino->bienes, bienDestino);
+
+    recibeOrigen = buscar_bien(origen->bienes, bienDestino);
+    recibeDestino = buscar_bien(destino->bienes, bienOrigen);
+
+    // Comprueba que los cuatro bienes existan
+    if (entregaOrigen == NULL || entregaDestino == NULL ||
+        recibeOrigen == NULL || recibeDestino == NULL) {
+        printf("No se encontraron todos los bienes necesarios.\n");
+        return 0;
+    }
+
+    // Comprueba que ambas comunas tengan suficiente cantidad
+    if (entregaOrigen->cantidad < cantidad ||
+        entregaDestino->cantidad < cantidad) {
+        printf("No hay suficientes existencias.\n");
+        return 0;
+    }
+
+    // Comprueba que las comunas puedan recibir los bienes
+    if (recibeOrigen->cantidad + cantidad > recibeOrigen->maximo ||
+        recibeDestino->cantidad + cantidad > recibeDestino->maximo) {
+        printf("El trueque supera la capacidad maxima.\n");
+        return 0;
+    }
+
+    // Cada comuna entrega un bien y recibe el de la otra
+    entregaOrigen->cantidad -= cantidad;
+    recibeOrigen->cantidad += cantidad;
+
+    entregaDestino->cantidad -= cantidad;
+    recibeDestino->cantidad += cantidad;
+
+    // Aumenta el valor de los bienes involucrados un 5 %
+    entregaOrigen->valor *= 1.05f;
+    entregaDestino->valor *= 1.05f;
+    recibeOrigen->valor *= 1.05f;
+    recibeDestino->valor *= 1.05f;
+
+    // Actualiza los indices despues del intercambio
+    calcular_indices_comuna(origen);
+    calcular_indices_comuna(destino);
+
+    printf("Trueque realizado entre %s y %s.\n",
+           origen->nombre, destino->nombre);
+
+    return 1;
+}
+
+// Realiza un intercambio de servicios entre dos comunas
+int realizar_trueque_servicios(struct Comuna *origen,
+                               struct Comuna *destino,
+                               const char *servicioOrigen,
+                               const char *servicioDestino,
+                               int cantidad) {
+
+    struct Existencia *entregaOrigen;
+    struct Existencia *entregaDestino;
+    struct Existencia *recibeOrigen;
+    struct Existencia *recibeDestino;
+
+    // Valida los datos del trueque
+    if (origen == NULL || destino == NULL ||
+        servicioOrigen == NULL || servicioDestino == NULL ||
+        origen == destino || cantidad <= 0 ||
+        strcmp(servicioOrigen, servicioDestino) == 0) {
+        printf("Datos del trueque no validos.\n");
+        return 0;
+    }
+
+    // Busca los servicios que se van a intercambiar
+    entregaOrigen = buscar_bien(origen->servicios, servicioOrigen);
+    entregaDestino = buscar_bien(destino->servicios, servicioDestino);
+
+    recibeOrigen = buscar_bien(origen->servicios, servicioDestino);
+    recibeDestino = buscar_bien(destino->servicios, servicioOrigen);
+
+    // Comprueba que los cuatro servicios existan
+    if (entregaOrigen == NULL || entregaDestino == NULL ||
+        recibeOrigen == NULL || recibeDestino == NULL) {
+        printf("No se encontraron todos los servicios necesarios.\n");
+        return 0;
+    }
+
+    // Comprueba que ambas comunas tengan suficientes servicios
+    if (entregaOrigen->cantidad < cantidad ||
+        entregaDestino->cantidad < cantidad) {
+        printf("No hay suficientes servicios disponibles.\n");
+        return 0;
+    }
+
+    // Comprueba que las comunas puedan recibir los servicios
+    if (recibeOrigen->cantidad + cantidad > recibeOrigen->maximo ||
+        recibeDestino->cantidad + cantidad > recibeDestino->maximo) {
+        printf("El trueque supera la capacidad maxima.\n");
+        return 0;
+    }
+
+    // Cada comuna entrega un servicio y recibe el de la otra
+    entregaOrigen->cantidad -= cantidad;
+    recibeOrigen->cantidad += cantidad;
+
+    entregaDestino->cantidad -= cantidad;
+    recibeDestino->cantidad += cantidad;
+
+    // Aumenta el valor de los servicios involucrados un 5 %
+    entregaOrigen->valor *= 1.05f;
+    entregaDestino->valor *= 1.05f;
+    recibeOrigen->valor *= 1.05f;
+    recibeDestino->valor *= 1.05f;
+
+    // Actualiza los indices despues del intercambio
+    calcular_indices_comuna(origen);
+    calcular_indices_comuna(destino);
+
+    printf("Trueque de servicios realizado entre %s y %s.\n",
+           origen->nombre, destino->nombre);
+
+    return 1;
+}
+
+// una persona le regala una unidad de un bien a otra
+int realizar_regalo(struct Persona *da, struct Persona *recibe,
+                    const char *bien) {
+    struct Existencia *sale;
+    struct Existencia *entra;
+
+    if (da == recibe || da->comunaActual == NULL ||
+        recibe->comunaActual == NULL) {
+        printf("El regalo no es valido.\n");
+        return 0;
+    }
+
+    // si son de comunas distintas, se mueve una unidad del bien
+    if (da->comunaActual != recibe->comunaActual) {
+        sale = buscar_bien(da->comunaActual->bienes, bien);
+        entra = buscar_bien(recibe->comunaActual->bienes, bien);
+
+        if (sale == NULL || entra == NULL ||
+            sale->cantidad < 1 || entra->cantidad >= entra->maximo) {
+            printf("No se puede realizar el regalo.\n");
+            return 0;
+        }
+
+        sale->cantidad--;
+        entra->cantidad++;
+    }
+
+    da->regalosDados++;
+    recibe->regalosRecibidos++;
+    return 1;
+}
+
+==> ./pruebas.c <==
+#include <stdio.h>
+#include <string.h>
+#include "listas.h"
+#include "sociedad.h"
+
+// estas funciones estan en sociedad.c y se usan para probar la lista doble
+int agregar_bien(struct Sociedad *sociedad, const char *nombre);
+int agregar_comuna(struct Sociedad *sociedad, const char *nombre);
+
+// cuenta cuantas pruebas salieron bien y cuantas mal
+int pruebasOk = 0;
+int pruebasMal = 0;
+
+// muestra si una prueba salio bien o mal y la cuenta
+void revisar(const char *descripcion, int condicion) {
+    if (condicion) {
+        printf("  [ok]  %s\n", descripcion);
+        pruebasOk++;
+    } else {
+        printf("  [MAL] %s\n", descripcion);
+        pruebasMal++;
+    }
+}
+
+// deja una sociedad vacia para poder probar las listas
+void sociedad_vacia(struct Sociedad *sociedad) {
+    sociedad->poblacionTotal = 0;
+    sociedad->cantidadComunas = 0;
+    sociedad->cantidadBienesActivos = 0;
+    sociedad->cantidadServiciosActivos = 0;
+    sociedad->dia = 0;
+    sociedad->diasParaEmergencia = 0;
+    sociedad->personas = NULL;
+    sociedad->catalogoServicios = NULL;
+    sociedad->catalogoBienes = NULL;
+    sociedad->nombresComunas = NULL;
+    sociedad->comunas = NULL;
+}
+
+// prueba la lista simple de listas.c
+void probar_lista_simple(void) {
+    Lista lista;
+
+    printf("\nlista simple (listas.c)\n");
+
+    inicializar_lista(&lista);
+    revisar("la lista nueva esta vacia", lista.inicio == NULL &&
+            lista.final == NULL && lista.cantidad == 0);
+
+    insertar_final(&lista, "ana");
+    revisar("con un solo nodo, inicio y final son el mismo",
+            lista.inicio == lista.final && lista.cantidad == 1);
+
+    insertar_final(&lista, "luis");
+    insertar_final(&lista, "maria");
+    revisar("despues de 3 inserciones la cantidad es 3",
+            lista.cantidad == 3);
+    revisar("el inicio es ana", strcmp(lista.inicio->nombre, "ana") == 0);
+    revisar("el final es maria", strcmp(lista.final->nombre, "maria") == 0);
+    revisar("el orden es ana, luis, maria",
+            strcmp(lista.inicio->siguiente->nombre, "luis") == 0 &&
+            lista.inicio->siguiente->siguiente == lista.final);
+    revisar("el final apunta a NULL", lista.final->siguiente == NULL);
+
+    printf("  contenido de la lista:\n");
+    imprimir_lista(&lista);
+
+    liberar_lista(&lista);
+    revisar("despues de liberar la lista queda vacia",
+            lista.inicio == NULL && lista.final == NULL &&
+            lista.cantidad == 0);
+}
+
+// prueba la lista doble que se usa en el catalogo de bienes
+void probar_lista_doble_bienes(void) {
+    struct Sociedad sociedad;
+    struct NodoNombreDoble *primero;
+    struct NodoNombreDoble *segundo;
+    struct NodoNombreDoble *ultimo;
+    struct NodoNombreDoble *actual;
+
+    printf("\nlista doble (catalogo de bienes)\n");
+
+    sociedad_vacia(&sociedad);
+    agregar_bien(&sociedad, "pan");
+    agregar_bien(&sociedad, "agua");
+    agregar_bien(&sociedad, "semillas");
+
+    primero = sociedad.catalogoBienes;
+    segundo = primero->siguiente;
+    ultimo = segundo->siguiente;
+
+    revisar("el primero no tiene anterior", primero->anterior == NULL);
+    revisar("el ultimo no tiene siguiente", ultimo->siguiente == NULL);
+    revisar("el anterior del segundo es el primero",
+            segundo->anterior == primero);
+    revisar("el anterior del ultimo es el segundo",
+            ultimo->anterior == segundo);
+
+    printf("  recorrido hacia adelante: ");
+    actual = primero;
+    while (actual != NULL) {
+        printf("%s ", actual->nombre);
+        actual = actual->siguiente;
+    }
+    printf("\n");
+
+    printf("  recorrido hacia atras:    ");
+    actual = ultimo;
+    while (actual != NULL) {
+        printf("%s ", actual->nombre);
+        actual = actual->anterior;
+    }
+    printf("\n");
+
+    revisar("el orden es pan, agua, semillas",
+            strcmp(primero->nombre, "pan") == 0 &&
+            strcmp(segundo->nombre, "agua") == 0 &&
+            strcmp(ultimo->nombre, "semillas") == 0);
+
+    liberar_sociedad(&sociedad);
+    revisar("despues de liberar el catalogo queda vacio",
+            sociedad.catalogoBienes == NULL);
+}
+
+// prueba la lista de comunas (con puntero anterior) y la lista doble de nombres
+void probar_comunas(void) {
+    struct Sociedad sociedad;
+    struct Comuna *primera;
+    struct Comuna *segunda;
+    struct Comuna *tercera;
+    struct NodoNombreDoble *nombre;
+
+    printf("\ncomunas (lista con anterior y siguiente)\n");
+
+    sociedad_vacia(&sociedad);
+    agregar_comuna(&sociedad, "Santiago");
+    agregar_comuna(&sociedad, "Providencia");
+    agregar_comuna(&sociedad, "Las Condes");
+
+    primera = sociedad.comunas;
+    segunda = primera->siguiente;
+    tercera = segunda->siguiente;
+
+    revisar("la primera comuna no tiene anterior", primera->anterior == NULL);
+    revisar("la ultima comuna no tiene siguiente", tercera->siguiente == NULL);
+    revisar("el anterior de la segunda es la primera",
+            segunda->anterior == primera);
+    revisar("el anterior de la tercera es la segunda",
+            tercera->anterior == segunda);
+
+    // la lista doble de nombres tiene el mismo orden
+    nombre = sociedad.nombresComunas;
+    revisar("la lista de nombres empieza en Santiago",
+            strcmp(nombre->nombre, "Santiago") == 0);
+    nombre = nombre->siguiente->siguiente;
+    revisar("la lista de nombres termina en Las Condes",
+            strcmp(nombre->nombre, "Las Condes") == 0);
+    revisar("yendo hacia atras desde el final se llega a Providencia",
+            strcmp(nombre->anterior->nombre, "Providencia") == 0);
+
+    liberar_sociedad(&sociedad);
+    revisar("despues de liberar no quedan comunas", sociedad.comunas == NULL);
+}
+
+// ejecuta todas las pruebas y muestra el resumen
+int main(void) {
+    probar_lista_simple();
+    probar_lista_doble_bienes();
+    probar_comunas();
+
+    printf("\nresumen: %d pruebas bien, %d pruebas mal\n",
+           pruebasOk, pruebasMal);
+
+    if (pruebasMal > 0) {
+        return 1;
+    }
+
+    return 0;
+}
+==> ./test_biblioteca.c <==
+#include "biblioteca.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+
+static void crear_corpus_prueba(void) {
+    mkdir("corpus_test", 0755);
+
+    FILE *f1 = fopen("corpus_test/kropotkin.txt", "w");
+    if (f1) {
+        fprintf(f1, "El apoyo mutuo es un factor de la evolucion.\nLa cooperacion fortalece la comuna.\n");
+        fclose(f1);
+    }
+
+    FILE *f2 = fopen("corpus_test/malatesta.txt", "w");
+    if (f2) {
+        fprintf(f2, "La libertad sin solidaridad no construye comunidad.\nOrganizacion horizontal.\n");
+        fclose(f2);
+    }
+
+    FILE *f3 = fopen("corpus_test/goldman.txt", "w");
+    if (f3) {
+        fprintf(f3, "La educacion y la lectura liberan el pensamiento critico en la comuna.\n");
+        fclose(f3);
+    }
+}
+
+int main(void) {
+    crear_corpus_prueba();
+
+    Biblioteca *bib = biblioteca_crear("Comuna Libertad", "corpus_test");
+    if (!bib) {
+        fprintf(stderr, "Error inicializando biblioteca\n");
+        return 1;
+    }
+
+    biblioteca_listar_catalogo(bib, 10);
+
+    /* 1. Búsqueda exacta por nombre en AVL */
+    biblioteca_buscar_libro(bib, "kropotkin.txt", 2);
+    biblioteca_buscar_libro(bib, "inexistente.txt", 0);
+
+    /* 2. Búsquedas de texto (Cache Misses -> inserción en Splay) */
+    biblioteca_buscar_texto(bib, "comuna", true);
+    biblioteca_mostrar_estado_cache(bib);
+
+    biblioteca_buscar_texto(bib, "libertad", true);
+    biblioteca_mostrar_estado_cache(bib);
+
+    biblioteca_buscar_texto(bib, "evolucion", true);
+    biblioteca_mostrar_estado_cache(bib);
+
+    /* 3. Búsqueda repetida (Cache Hit -> "comuna" debe subir a la raíz con rotaciones) */
+    biblioteca_buscar_texto(bib, "comuna", true);
+    biblioteca_mostrar_estado_cache(bib);
+
+    biblioteca_destruir(bib);
+    return 0;
+}
+==> ./consumo.h <==
+
+#ifndef CONSUMO_H
+#define CONSUMO_H
+
+#include "sociedad.h"
+
+// aplica el consumo de un dia a todas las comunas
+void aplicar_consumo_diario(struct Sociedad *sociedad);
+
+#endif
+
+==> ./arbol_avl.c <==
+#define _POSIX_C_SOURCE 200809L
+#include "arbol_avl.h"
+
+#include <stdlib.h>
+#include <string.h>
+
+// obtiene el numero mayor entre dos valores
+static int max_int(int a, int b) {
+    return (a > b) ? a : b;
+}
+
+// obtiene la altura de un nodo
+static int altura_nodo(const NodoAVL *nodo) {
+    return nodo ? nodo->altura : 0;
+}
+
+// calcula el balance del nodo
+static int factor_balance(const NodoAVL *nodo) {
+    if (!nodo) return 0;
+    return altura_nodo(nodo->izq) - altura_nodo(nodo->der);
+}
+
+// crea un nuevo nodo y guarda el nombre y la ruta del archivo
+static NodoAVL *crear_nodo(const char *nombre_archivo, const char *ruta_completa) {
+    NodoAVL *nuevo = (NodoAVL *)malloc(sizeof(NodoAVL));
+    if (!nuevo) return NULL;
+
+    nuevo->nombre_archivo = strdup(nombre_archivo);
+    nuevo->ruta_completa = strdup(ruta_completa);
+    if (!nuevo->nombre_archivo || !nuevo->ruta_completa) {
+        free(nuevo->nombre_archivo);
+        free(nuevo->ruta_completa);
+        free(nuevo);
+        return NULL;
+    }
+
+    nuevo->altura = 1;
+    nuevo->izq = NULL;
+    nuevo->der = NULL;
+    return nuevo;
+}
+
+// realiza una rotacion hacia la derecha para balancear el arbol
+static NodoAVL *rotar_derecha(NodoAVL *y) {
+    NodoAVL *x = y->izq;
+    NodoAVL *T2 = x->der;
+
+    x->der = y;
+    y->izq = T2;
+
+    y->altura = 1 + max_int(altura_nodo(y->izq), altura_nodo(y->der));
+    x->altura = 1 + max_int(altura_nodo(x->izq), altura_nodo(x->der));
+
+    return x;
+}
+
+// realiza una rotacion hacia la izquierda para balancear el arbol
+static NodoAVL *rotar_izquierda(NodoAVL *x) {
+    NodoAVL *y = x->der;
+    NodoAVL *T2 = y->izq;
+
+    y->izq = x;
+    x->der = T2;
+
+    x->altura = 1 + max_int(altura_nodo(x->izq), altura_nodo(x->der));
+    y->altura = 1 + max_int(altura_nodo(y->izq), altura_nodo(y->der));
+
+    return y;
+}
+
+// inserta un nuevo nodo y mantiene el arbol balanceado
+static NodoAVL *insertar_recursivo(NodoAVL *nodo,
+                                   const char *nombre_archivo,
+                                   const char *ruta_completa,
+                                   bool *insertado) {
+    if (!nodo) {
+        NodoAVL *nuevo = crear_nodo(nombre_archivo, ruta_completa);
+        if (nuevo) *insertado = true;
+        return nuevo;
+    }
+
+    int cmp = strcmp(nombre_archivo, nodo->nombre_archivo);
+    if (cmp < 0) {
+        nodo->izq = insertar_recursivo(nodo->izq, nombre_archivo, ruta_completa, insertado);
+    } else if (cmp > 0) {
+        nodo->der = insertar_recursivo(nodo->der, nombre_archivo, ruta_completa, insertado);
+    } else {
+        // si el nombre ya existe, no lo vuelve a insertar
+        *insertado = false;
+        return nodo;
+    }
+
+    // actualiza la altura del nodo
+    nodo->altura = 1 + max_int(altura_nodo(nodo->izq), altura_nodo(nodo->der));
+
+    // revisa si el nodo necesita balancearse
+    int balance = factor_balance(nodo);
+
+    // caso izquierda-izquierda
+    if (balance > 1 && strcmp(nombre_archivo, nodo->izq->nombre_archivo) < 0) {
+        return rotar_derecha(nodo);
+    }
+
+    // caso derecha-derecha
+    if (balance < -1 && strcmp(nombre_archivo, nodo->der->nombre_archivo) > 0) {
+        return rotar_izquierda(nodo);
+    }
+
+    // caso izquierda-derecha
+    if (balance > 1 && strcmp(nombre_archivo, nodo->izq->nombre_archivo) > 0) {
+        nodo->izq = rotar_izquierda(nodo->izq);
+        return rotar_derecha(nodo);
+    }
+
+    // caso derecha-izquierda
+    if (balance < -1 && strcmp(nombre_archivo, nodo->der->nombre_archivo) < 0) {
+        nodo->der = rotar_derecha(nodo->der);
+        return rotar_izquierda(nodo);
+    }
+
+    return nodo;
+}
+
+// recorre el arbol en orden y ejecuta el callback por cada nodo
+static void inorder_recursivo(const NodoAVL *nodo, CallbackNodoAVL callback, void *contexto) {
+    if (!nodo) return;
+    inorder_recursivo(nodo->izq, callback, contexto);
+    callback(nodo, contexto);
+    inorder_recursivo(nodo->der, callback, contexto);
+}
+
+// libera la memoria de todos los nodos del arbol
+static void destruir_recursivo(NodoAVL *nodo) {
+    if (!nodo) return;
+    destruir_recursivo(nodo->izq);
+    destruir_recursivo(nodo->der);
+    free(nodo->nombre_archivo);
+    free(nodo->ruta_completa);
+    free(nodo);
+}
+
+// crea e inicializa un arbol AVL vacio
+ArbolAVL *avl_crear(void) {
+    ArbolAVL *arbol = (ArbolAVL *)malloc(sizeof(ArbolAVL));
+    if (!arbol) return NULL;
+    arbol->raiz = NULL;
+    arbol->total_nodos = 0;
+    return arbol;
+}
+
+// inserta un libro en el arbol y actualiza la cantidad de nodos
+bool avl_insertar(ArbolAVL *arbol, const char *nombre_archivo, const char *ruta_completa) {
+    if (!arbol || !nombre_archivo || !ruta_completa) return false;
+
+    bool insertado = false;
+    arbol->raiz = insertar_recursivo(arbol->raiz, nombre_archivo, ruta_completa, &insertado);
+    if (insertado) {
+        arbol->total_nodos++;
+    }
+    return insertado;
+}
+
+// busca un libro por su nombre exacto
+const NodoAVL *avl_buscar_exacto(const ArbolAVL *arbol, const char *nombre_archivo) {
+    if (!arbol || !nombre_archivo) return NULL;
+
+    const NodoAVL *actual = arbol->raiz;
+    while (actual != NULL) {
+        int cmp = strcmp(nombre_archivo, actual->nombre_archivo);
+        if (cmp == 0) {
+            return actual;
+        } else if (cmp < 0) {
+            actual = actual->izq;
+        } else {
+            actual = actual->der;
+        }
+    }
+    return NULL;
+}
+
+// recorre todos los libros en orden alfabetico
+void avl_recorrer_inorder(const ArbolAVL *arbol, CallbackNodoAVL callback, void *contexto) {
+    if (!arbol || !callback) return;
+    inorder_recursivo(arbol->raiz, callback, contexto);
+}
+
+// obtiene la altura actual del arbol
+int avl_obtener_altura(const ArbolAVL *arbol) {
+    if (!arbol) return 0;
+    return altura_nodo(arbol->raiz);
+}
+
+// libera toda la memoria utilizada por el arbol
+void avl_destruir(ArbolAVL *arbol) {
+    if (!arbol) return;
+    destruir_recursivo(arbol->raiz);
+    free(arbol);
+}
+==> ./emergencias.h <==
+#ifndef EMERGENCIAS_H
+#define EMERGENCIAS_H
+
+#include "sociedad.h"
+
+// genera una emergencia en una comuna aleatoria
+void generar_emergencia(struct Sociedad *sociedad);
+
+// afecta la satisfaccion de las comunas cercanas a una emergencia
+void afectar_comunas_cercanas(struct Comuna *afectada);
+
+#endif
+==> ./sociedad.h <==
+#ifndef SOCIEDAD_H
+#define SOCIEDAD_H
+#include "biblioteca.h"
+
+// guarda un nombre en una lista simple
+struct NodoNombre {
+    char *nombre;
+    struct NodoNombre *siguiente;
+};
+
+// esta lista tiene enlaces hacia adelante y hacia atrás
+struct NodoNombreDoble {
+    char *nombre;
+    struct NodoNombreDoble *anterior;
+    struct NodoNombreDoble *siguiente;
+};
+
+// guarda las existencias de un bien o servicio en una comuna
+struct Existencia {
+    char *nombre;
+    int cantidad;
+    int maximo;
+    float valor;
+    struct Existencia *siguiente;
+};
+
+struct Comuna; // declaración adelantada: Persona apunta a una Comuna que se define después
+
+// un servicio que sabe hacer una persona
+struct ServicioPersona {
+    char *nombre;
+    struct ServicioPersona *siguiente;
+};
+
+// un libro que la persona ya leyó (sin repetidos)
+struct LibroLeido {
+    char *nombreArchivo;
+    struct LibroLeido *siguiente;
+};
+
+// una persona de la sociedad
+struct Persona {
+    char *nombre;
+    struct Comuna *comunaActual;           // solo referencia, NO se libera desde aquí
+    struct LibroLeido *librosLeidos;
+    struct ServicioPersona *servicios;     // puede ser NULL
+    int regalosDados;
+    int regalosRecibidos;
+    struct Persona *siguiente;
+};
+
+// representa una comuna dentro de la sociedad
+struct Comuna {
+    char *nombre;
+    int poblacion;
+
+    struct Existencia *bienes;
+    struct Existencia *servicios;
+
+    float necesidad;
+    float satisfaccion;
+    float reciprocidad;
+    int administrada;   // 1 = administrada (maximo 3), 0 = autonoma
+    Biblioteca *biblioteca;   // la libera la comuna al disolverse o al cerrar
+    float penalizacionEmergencia;
+
+    struct Comuna *anterior;
+    struct Comuna *siguiente;
+};
+
+// contiene los datos generales de la simulacion
+struct Sociedad {
+    int poblacionTotal;
+    int cantidadComunas;
+    int cantidadBienesActivos;
+    int cantidadServiciosActivos;
+    int dia;
+    int diasParaEmergencia;
+
+    struct Persona *personas;
+    struct NodoNombre *catalogoServicios;
+    struct NodoNombreDoble *catalogoBienes;
+    struct NodoNombreDoble *nombresComunas;
+
+    struct Comuna *comunas;
+    ArbolAVL *indiceLibros;   // AVL compartido por todas las bibliotecas
+};
+
+// pide los datos al usuario, carga los archivos y crea la sociedad
+int inicializar_sociedad(struct Sociedad *sociedad,
+                         const char *archivoPersonas,
+                         const char *archivoComunas,
+                         const char *archivoBienes,
+                         const char *archivoServicios);
+
+// libera toda la memoria de la sociedad
+void liberar_sociedad(struct Sociedad *sociedad);
+
+// calcula los indices de necesidad y satisfaccion de una comuna
+void calcular_indices_comuna(struct Comuna *comuna);
+// calcula los indices de todas las comunas de la sociedad
+void calcular_indices_sociedad(struct Sociedad *sociedad);
+// agrega un servicio a una persona (devuelve 0 si ya lo sabia o fallo)
+int persona_aprender_servicio(struct Persona *p, const char *servicio);
+// calcula el indice de reciprocidad de una comuna (0 a 100)
+void calcular_reciprocidad_comuna(struct Sociedad *sociedad,
+                                  struct Comuna *comuna);
+// si la necesidad llega a este valor o mas, la comuna se disuelve
+#define UMBRAL_NECESIDAD 45.0f
+// si la satisfaccion baja a este valor o menos, la comuna se disuelve
+#define UMBRAL_SATISFACCION 50.0f
+// disuelve una comuna y muda a sus personas a otra (devuelve 0 si no pudo)
+int disolver_comuna(struct Sociedad *sociedad, struct Comuna *comuna);
+// disuelve las comunas con necesidad muy alta o satisfaccion muy baja
+void revisar_disoluciones(struct Sociedad *sociedad);
+// construye el AVL y crea la biblioteca de cada comuna
+int crear_bibliotecas(struct Sociedad *sociedad, const char *rutaCorpus);
+// registra un libro leido (devuelve 0 si ya lo habia leido o fallo)
+int registrar_libro_leido(struct Persona *p, const char *nombreArchivo);
+// cuenta los libros distintos leidos por una persona
+int contar_libros_leidos(const struct Persona *p);
+// con 3 libros leidos la persona aprende un servicio y gasta sus libros
+int aprender_servicio_leyendo(struct Persona *p, const char *servicio);
+#endif
+
+==> ./listas.h <==
+
+#ifndef LISTAS_H
+#define LISTAS_H
+
+// guarda un nombre y apunta al siguiente nodo
+typedef struct Nodo {
+    char *nombre;
+    struct Nodo *siguiente;
+} Nodo;
+
+// guarda el inicio, el final y la cantidad de nodos de la lista
+typedef struct {
+    Nodo *inicio;
+    Nodo *final;
+    int cantidad;
+} Lista;
+
+// deja la lista vacía para poder empezar a usarla
+void inicializar_lista(Lista *lista);
+
+// agrega un nombre al final de la lista
+int insertar_final(Lista *lista, const char *nombre);
+
+// recorre la lista y muestra todos los nombres
+void imprimir_lista(const Lista *lista);
+
+// libera la memoria que se usó para guardar los nodos y sus nombres
+void liberar_lista(Lista *lista);
+// lee un archivo y guarda sus nombres en una lista
+int cargar_archivo(const char *nombre_archivo, Lista *lista);
+#endif
+
+==> ./main.c <==
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include "sociedad.h"
+#include "consumo.h"
+#include "economia.h"
+#include "emergencias.h"
+
+// colores para mostrar los mensajes
+#define VERDE "\033[32m"
+#define ROJO "\033[31m"
+#define AMARILLO "\033[33m"
+#define CIAN "\033[36m"
+#define AZUL "\033[34m"
+#define NEGRITA "\033[1m"
+#define RESET "\033[0m"
+
+struct Persona *buscar_persona(struct Sociedad *sociedad, int numero);
+
+// muestra un titulo en pantalla
+void mostrar_titulo(const char *titulo) {
+    printf("\n" CIAN NEGRITA);
+    printf("========================================\n");
+    printf("  %s\n", titulo);
+    printf("========================================\n");
+    printf(RESET);
+}
+
+// muestra un mensaje de error
+void mostrar_error(const char *mensaje) {
+    printf(ROJO "\n[!] %s\n" RESET, mensaje);
+}
+
+// muestra un mensaje de exito
+void mostrar_exito(const char *mensaje) {
+    printf(VERDE "\n[+] %s\n" RESET, mensaje);
+}
+
+// limpia los datos que quedaron en la entrada
+void limpiar_entrada(void) {
+    int caracter;
+
+    while ((caracter = getchar()) != '\n' && caracter != EOF) {
+    }
+}
+
+// pide un numero dentro de un rango valido
+int pedir_opcion(const char *mensaje, int minimo, int maximo) {
+    int opcion;
+
+    while (1) {
+        printf("%s", mensaje);
+
+        if (scanf("%d", &opcion) != 1) {
+            limpiar_entrada();
+            mostrar_error("Entrada no valida. Ingrese un numero.");
+            continue;
+        }
+
+        limpiar_entrada();
+
+        if (opcion < minimo || opcion > maximo) {
+            mostrar_error("Opcion fuera de rango. Intente de nuevo.");
+            continue;
+        }
+
+        return opcion;
+    }
+}
+
+// muestra el estado actual de las comunas
+void mostrar_comunas(struct Sociedad *sociedad) {
+    struct Comuna *comuna = sociedad->comunas;
+
+    mostrar_titulo("ESTADO DE LAS COMUNAS");
+
+    if (comuna == NULL) {
+        mostrar_error("No hay comunas para mostrar.");
+        return;
+    }
+
+    printf("%-22s %10s %12s %14s\n",
+           "Comuna", "Poblacion", "Necesidad", "Satisfaccion");
+
+    printf("--------------------------------------------------------------\n");
+
+    while (comuna != NULL) {
+        printf("%-22s %10d ", comuna->nombre, comuna->poblacion);
+
+        if (comuna->necesidad >= 70) {
+            printf(ROJO "%12.2f " RESET, comuna->necesidad);
+        } else if (comuna->necesidad >= 40) {
+            printf(AMARILLO "%12.2f " RESET, comuna->necesidad);
+        } else {
+            printf(VERDE "%12.2f " RESET, comuna->necesidad);
+        }
+
+        if (comuna->satisfaccion >= 70) {
+            printf(VERDE "%14.2f\n" RESET, comuna->satisfaccion);
+        } else if (comuna->satisfaccion >= 40) {
+            printf(AMARILLO "%14.2f\n" RESET, comuna->satisfaccion);
+        } else {
+            printf(ROJO "%14.2f\n" RESET, comuna->satisfaccion);
+        }
+
+        comuna = comuna->siguiente;
+    }
+}
+
+// permite seleccionar un bien o servicio
+struct Existencia *seleccionar_existencia(
+    struct Existencia *lista, const char *mensaje) {
+
+    struct Existencia *actual = lista;
+    struct Existencia *seleccionado;
+    int opcion;
+    int i = 1;
+
+    if (lista == NULL) {
+        mostrar_error("No hay elementos disponibles.");
+        return NULL;
+    }
+
+    printf("\n" NEGRITA "%s\n" RESET, mensaje);
+
+    while (actual != NULL) {
+        printf("  %d. %-22s cantidad: %d, valor: %.2f\n",
+               i, actual->nombre, actual->cantidad, actual->valor);
+
+        actual = actual->siguiente;
+        i++;
+    }
+
+    opcion = pedir_opcion("\nSeleccione una opcion: ", 1, i - 1);
+
+    seleccionado = lista;
+
+    for (i = 1; i < opcion; i++) {
+        seleccionado = seleccionado->siguiente;
+    }
+
+    return seleccionado;
+}
+
+// permite intercambiar bienes o servicios entre dos comunas
+int menu_trueque(struct Sociedad *sociedad) {
+    struct Comuna *origen;
+    struct Comuna *destino;
+    struct Comuna *actual;
+    struct Existencia *elementoOrigen;
+    struct Existencia *elementoDestino;
+    struct Existencia *listaOrigen;
+    struct Existencia *listaDestino;
+    int tipo;
+    int numero;
+    int i;
+    int cantidad;
+    int resultado;
+
+    mostrar_titulo("MENU DE TRUEQUE");
+
+    printf("1. Intercambiar bienes\n");
+    printf("2. Intercambiar servicios\n");
+    printf("0. Continuar sin intercambiar\n\n");
+
+    tipo = pedir_opcion("Opcion: ", 0, 2);
+
+    if (tipo == 0) {
+        printf(AMARILLO "\nSe continua sin realizar trueques.\n" RESET);
+        return 0;
+    }
+
+    if (sociedad->cantidadComunas < 2) {
+        mostrar_error("Se necesitan al menos dos comunas para intercambiar.");
+        return 0;
+    }
+
+    printf("\n" NEGRITA "COMUNAS DISPONIBLES\n" RESET);
+
+    actual = sociedad->comunas;
+    i = 1;
+
+    while (actual != NULL) {
+        printf("  %d. %s\n", i, actual->nombre);
+        actual = actual->siguiente;
+        i++;
+    }
+
+    numero = pedir_opcion("\nNumero de la comuna que entrega: ",
+                          1, sociedad->cantidadComunas);
+
+    origen = sociedad->comunas;
+
+    for (i = 1; i < numero; i++) {
+        origen = origen->siguiente;
+    }
+
+    // vuelve a pedir la comuna si se selecciona la misma
+    do {
+        numero = pedir_opcion("Numero de la comuna que recibe: ",
+                              1, sociedad->cantidadComunas);
+
+        destino = sociedad->comunas;
+
+        for (i = 1; i < numero; i++) {
+            destino = destino->siguiente;
+        }
+
+        if (destino == origen) {
+            mostrar_error("Debe seleccionar una comuna diferente.");
+        }
+
+    } while (destino == origen);
+
+    // selecciona las listas segun el tipo de intercambio
+    if (tipo == 1) {
+        listaOrigen = origen->bienes;
+        listaDestino = destino->bienes;
+    } else {
+        listaOrigen = origen->servicios;
+        listaDestino = destino->servicios;
+    }
+
+    printf("\n" AZUL "Comuna que entrega: %s\n" RESET, origen->nombre);
+
+    elementoOrigen = seleccionar_existencia(
+        listaOrigen, "Seleccione lo que entrega esta comuna:");
+
+    if (elementoOrigen == NULL) {
+        return 1;
+    }
+
+    printf("\n" AZUL "Comuna que recibe: %s\n" RESET, destino->nombre);
+
+    elementoDestino = seleccionar_existencia(
+        listaDestino, "Seleccione lo que entrega la otra comuna:");
+
+    if (elementoDestino == NULL) {
+        return 1;
+    }
+
+    // vuelve a pedir la cantidad si no es valida
+    do {
+        printf("\nCantidad que intercambiara cada comuna: ");
+
+        if (scanf("%d", &cantidad) != 1) {
+            limpiar_entrada();
+            mostrar_error("Ingrese una cantidad numerica.");
+            cantidad = 0;
+        } else {
+            limpiar_entrada();
+
+            if (cantidad <= 0) {
+                mostrar_error("La cantidad debe ser mayor que cero.");
+            }
+        }
+
+    } while (cantidad <= 0);
+
+    // realiza el intercambio seleccionado
+    if (tipo == 1) {
+        resultado = realizar_trueque(
+            origen, destino,
+            elementoOrigen->nombre,
+            elementoDestino->nombre,
+            cantidad);
+    } else {
+        resultado = realizar_trueque_servicios(
+            origen, destino,
+            elementoOrigen->nombre,
+            elementoDestino->nombre,
+            cantidad);
+    }
+
+    if (resultado) {
+        mostrar_exito("El intercambio se completo correctamente.");
+    } else {
+        mostrar_error("No se pudo realizar el intercambio. Revise las existencias.");
+    }
+    return 1;
+}
+
+// muestra las comunas y devuelve la que elija el usuario
+struct Comuna *seleccionar_comuna(struct Sociedad *sociedad,
+                                  const char *mensaje) {
+    struct Comuna *actual = sociedad->comunas;
+    int numero;
+    int i = 1;
+
+    printf("\n" NEGRITA "COMUNAS DISPONIBLES\n" RESET);
+
+    while (actual != NULL) {
+        printf("  %d. %s\n", i, actual->nombre);
+        actual = actual->siguiente;
+        i++;
+    }
+
+    numero = pedir_opcion(mensaje, 1, sociedad->cantidadComunas);
+
+    actual = sociedad->comunas;
+
+    for (i = 1; i < numero; i++) {
+        actual = actual->siguiente;
+    }
+
+    return actual;
+}
+
+// muestra las personas de una comuna con su numero y sus servicios
+void mostrar_personas_comuna(struct Sociedad *sociedad,
+                             struct Comuna *comuna) {
+    struct Persona *p = sociedad->personas;
+    int numero = 1;
+
+    printf("\n" NEGRITA "PERSONAS DE %s\n" RESET, comuna->nombre);
+
+    while (p != NULL) {
+        if (p->comunaActual == comuna) {
+            struct ServicioPersona *s = p->servicios;
+
+            printf("  %3d. %-28s", numero, p->nombre);
+
+            if (s == NULL) {
+                printf(" sin servicios");
+            }
+
+            while (s != NULL) {
+                printf(" [%s]", s->nombre);
+                s = s->siguiente;
+            }
+
+            printf("  (dados: %d, recibidos: %d)\n",
+                   p->regalosDados, p->regalosRecibidos);
+        }
+
+        p = p->siguiente;
+        numero++;
+    }
+}
+
+// pide dos personas por su numero y realiza el regalo
+void menu_regalo(struct Sociedad *sociedad) {
+    struct Persona *da;
+    struct Persona *recibe;
+    struct Existencia *bien;
+    int numero;
+
+    numero = pedir_opcion("\nNumero de la persona que regala: ",
+                          1, sociedad->poblacionTotal);
+    da = buscar_persona(sociedad, numero);
+
+    numero = pedir_opcion("Numero de la persona que recibe: ",
+                          1, sociedad->poblacionTotal);
+    recibe = buscar_persona(sociedad, numero);
+
+    printf("\n" AZUL "%s le regala a %s\n" RESET, da->nombre, recibe->nombre);
+
+    bien = seleccionar_existencia(da->comunaActual->bienes,
+                                  "Seleccione el bien que se regala:");
+
+    if (bien == NULL) {
+        return;
+    }
+
+    if (realizar_regalo(da, recibe, bien->nombre)) {
+        calcular_indices_sociedad(sociedad);
+        mostrar_exito("El regalo se realizo correctamente.");
+    } else {
+        mostrar_error("No se pudo realizar el regalo.");
+    }
+}
+
+// una persona busca un texto en la biblioteca de su comuna y lee un libro
+void menu_lectura(struct Sociedad *sociedad) {
+    struct Persona *p;
+    struct NodoNombre *servicio;
+    Biblioteca *bib;
+    const char *libro;
+    char texto[200];
+    int cantidad;
+    int limite;
+    int numero;
+    int i;
+
+    numero = pedir_opcion("\nNumero de la persona que lee: ",
+                          1, sociedad->poblacionTotal);
+    p = buscar_persona(sociedad, numero);
+    bib = p->comunaActual->biblioteca;
+
+    printf("Texto a buscar: ");
+
+    if (fgets(texto, sizeof(texto), stdin) == NULL) {
+        return;
+    }
+
+    texto[strcspn(texto, "\n")] = '\0';
+
+    if (texto[0] == '\0') {
+        mostrar_error("El texto no puede estar vacio.");
+        return;
+    }
+
+    cantidad = biblioteca_buscar_texto(bib, texto, false);
+
+    if (cantidad <= 0) {
+        mostrar_error("No se encontraron libros con ese texto.");
+        return;
+    }
+
+    // muestra como maximo 10 resultados para poder elegir
+    limite = cantidad < 10 ? cantidad : 10;
+
+    printf("\n" NEGRITA "Libros encontrados (%d):\n" RESET, cantidad);
+
+    for (i = 0; i < limite; i++) {
+        printf("  %d. %s\n", i + 1, biblioteca_obtener_resultado_texto(bib, i));
+    }
+
+    numero = pedir_opcion("\nLibro que lee (0 para ninguno): ", 0, limite);
+
+    if (numero == 0) {
+        return;
+    }
+
+    libro = biblioteca_obtener_resultado_texto(bib, numero - 1);
+
+    if (libro == NULL) {
+        return;
+    }
+
+    if (registrar_libro_leido(p, libro)) {
+        printf("%s ha leido %d libro(s) distinto(s).\n",
+               p->nombre, contar_libros_leidos(p));
+    } else {
+        mostrar_error("Ya habia leido ese libro.");
+    }
+
+    if (contar_libros_leidos(p) < 3) {
+        return;
+    }
+
+    printf("\n" NEGRITA "Ya puede aprender un servicio:\n" RESET);
+
+    servicio = sociedad->catalogoServicios;
+
+    for (i = 1; i <= sociedad->cantidadServiciosActivos; i++) {
+        printf("  %d. %s\n", i, servicio->nombre);
+        servicio = servicio->siguiente;
+    }
+
+    numero = pedir_opcion("\nServicio que aprende: ",
+                          1, sociedad->cantidadServiciosActivos);
+
+    servicio = sociedad->catalogoServicios;
+
+    for (i = 1; i < numero; i++) {
+        servicio = servicio->siguiente;
+    }
+
+    if (aprender_servicio_leyendo(p, servicio->nombre)) {
+        mostrar_exito("La persona aprendio el servicio.");
+    } else {
+        mostrar_error("No pudo aprenderlo (quizas ya lo sabia).");
+    }
+}
+
+// menu de la biblioteca de una comuna
+void menu_biblioteca(struct Sociedad *sociedad) {
+    struct Comuna *comuna;
+    char nombre[200];
+    int opcion;
+
+    do {
+        mostrar_titulo("MENU DE BIBLIOTECA");
+
+        printf("1. Ver catalogo de libros (primeros 20)\n");
+        printf("2. Buscar un libro por nombre exacto\n");
+        printf("3. Ver el estado de la cache de una comuna\n");
+        printf("0. Continuar\n\n");
+
+        opcion = pedir_opcion("Opcion: ", 0, 3);
+
+        if (opcion == 0) {
+            continue;
+        }
+
+        comuna = seleccionar_comuna(sociedad, "\nNumero de la comuna: ");
+
+        if (opcion == 1) {
+            biblioteca_listar_catalogo(comuna->biblioteca, 20);
+        } else if (opcion == 2) {
+            printf("Nombre exacto del archivo: ");
+
+            if (fgets(nombre, sizeof(nombre), stdin) != NULL) {
+                nombre[strcspn(nombre, "\n")] = '\0';
+
+                if (!biblioteca_buscar_libro(comuna->biblioteca, nombre, 3)) {
+                    mostrar_error("No existe un libro con ese nombre.");
+                }
+            }
+        } else {
+            biblioteca_mostrar_estado_cache(comuna->biblioteca);
+        }
+    } while (opcion != 0);
+}
+
+// se repite hasta que el usuario elija continuar
+void menu_personas(struct Sociedad *sociedad) {
+    int opcion;
+
+    do {
+        mostrar_titulo("MENU DE PERSONAS");
+
+        printf("1. Ver las personas de una comuna\n");
+        printf("2. Regalar un bien\n");
+        printf("3. Leer un libro (prueba)\n");
+        printf("0. Continuar\n\n");
+
+        opcion = pedir_opcion("Opcion: ", 0, 3);
+
+        if (opcion == 1) {
+            mostrar_personas_comuna(sociedad,
+                seleccionar_comuna(sociedad, "\nNumero de la comuna: "));
+        } else if (opcion == 2) {
+            menu_regalo(sociedad);
+        } else if (opcion == 3) {
+            menu_lectura(sociedad);
+        }
+    } while (opcion != 0);
+}
+
+// busca una persona por su numero en la lista (empieza en 1)
+struct Persona *buscar_persona(struct Sociedad *sociedad, int numero) {
+    struct Persona *p = sociedad->personas;
+    int i;
+
+    for (i = 1; i < numero && p != NULL; i++) {
+        p = p->siguiente;
+    }
+
+    return p;
+}
+
+// muestra el resumen de la simulacion
+void mostrar_resumen(struct Sociedad *sociedad) {
+    struct Comuna *comuna = sociedad->comunas;
+    float totalNecesidad = 0;
+    float totalSatisfaccion = 0;
+    int cantidadComunas = 0;
+    int poblacion = 0;
+
+    mostrar_titulo("RESUMEN FINAL DE LA SIMULACION");
+
+    while (comuna != NULL) {
+        totalNecesidad += comuna->necesidad;
+        totalSatisfaccion += comuna->satisfaccion;
+        poblacion += comuna->poblacion;
+        cantidadComunas++;
+
+        comuna = comuna->siguiente;
+    }
+
+    printf("Dias simulados: %d\n", sociedad->dia-1);
+    printf("Poblacion total: %d\n", poblacion);
+    printf("Comunas registradas: %d\n", cantidadComunas);
+
+    if (cantidadComunas > 0) {
+        printf("Necesidad promedio: %.2f\n",
+               totalNecesidad / cantidadComunas);
+
+        printf("Satisfaccion promedio: %.2f\n",
+               totalSatisfaccion / cantidadComunas);
+    }
+
+    printf("\n" NEGRITA "ESTADO DE CADA COMUNA\n" RESET);
+
+    comuna = sociedad->comunas;
+
+    while (comuna != NULL) {
+        printf("\n%s\n", comuna->nombre);
+        printf("  Necesidad: %.2f\n", comuna->necesidad);
+        printf("  Satisfaccion: %.2f\n", comuna->satisfaccion);
+		printf("  Tipo: %s\n", comuna->administrada ? "Administrada" : "Autonoma");
+        if (comuna->satisfaccion >= 70) {
+            printf(VERDE "  Estado: estable\n" RESET);
+        } else if (comuna->satisfaccion >= 40) {
+            printf(AMARILLO "  Estado: necesita mejoras\n" RESET);
+        } else {
+            printf(ROJO "  Estado: necesita ayuda\n" RESET);
+        }
+        
+        comuna = comuna->siguiente;
+    }
+	if (sociedad->cantidadComunas < 3) {
+		mostrar_error("RESULTADO FINAL: FRACASO, quedaron menos de 3 comunas.");
+	}
+    printf("\n");
+}
+
+// inicia y ejecuta la simulacion
+int main(void) {
+    struct Sociedad sociedad = {0};
+    int dia;
+
+    srand((unsigned int) time(NULL));
+
+    mostrar_titulo("SIMULACION DE LA SOCIEDAD SOLARPUNK");
+
+    printf(AMARILLO NEGRITA);
+    printf("\n     AUTORIDAD SUPREMA, TENGANOS PIEDAD\n\n");
+    printf(RESET);
+
+    printf("Iniciando la sociedad...\n");
+
+    // carga los datos iniciales desde los archivos
+    if (!inicializar_sociedad(
+            &sociedad,
+            "Datos/personas",
+            "Datos/comunas",
+            "Datos/bienes",
+            "Datos/servicios")) {
+
+        mostrar_error("No se pudo inicializar la sociedad.");
+        return 1;
+    }
+	
+	// pide la ruta del corpus (la define el profe el dia de la revision)
+    char rutaCorpus[300];
+
+    limpiar_entrada();   // quita el salto de linea que dejo el ultimo scanf
+    printf("Ruta de la carpeta del corpus: ");
+
+    if (fgets(rutaCorpus, sizeof(rutaCorpus), stdin) == NULL) {
+        liberar_sociedad(&sociedad);
+        return 1;
+    }
+
+    rutaCorpus[strcspn(rutaCorpus, "\n")] = '\0';
+
+    if (!crear_bibliotecas(&sociedad, rutaCorpus)) {
+        mostrar_error("No se pudo crear la biblioteca. Revise la ruta del corpus.");
+        liberar_sociedad(&sociedad);
+        return 1;
+    }
+	
+    calcular_indices_sociedad(&sociedad);
+
+    mostrar_exito("La sociedad se inicializo correctamente.");
+
+    mostrar_comunas(&sociedad);
+
+    // ejecuta los dias de la simulacion
+    for (dia = 1; dia <= 15; dia++) {
+        sociedad.dia = dia;
+
+        mostrar_titulo("NUEVO DIA DE SIMULACION");
+
+        printf(NEGRITA "DIA %d DE 15\n" RESET, dia);
+
+        // genera una emergencia cuando llega el momento
+        if (sociedad.diasParaEmergencia <= 0) {
+            generar_emergencia(&sociedad);
+        }
+
+            if (dia < 15) {
+				menu_personas(&sociedad);
+				menu_biblioteca(&sociedad);
+
+				while (menu_trueque(&sociedad)) {
+            }
+        }
+
+        // aplica el consumo y actualiza los indices
+        aplicar_consumo_diario(&sociedad);
+        calcular_indices_sociedad(&sociedad);
+		
+		int comunasAntes = sociedad.cantidadComunas;
+
+		revisar_disoluciones(&sociedad);
+		calcular_indices_sociedad(&sociedad);
+
+		if (comunasAntes >= 3 && sociedad.cantidadComunas < 3) {
+			mostrar_error("FRACASO: quedan menos de 3 comunas.");
+		}
+		
+        printf("\n" CIAN "Estado al finalizar el dia %d:\n" RESET, dia);
+        mostrar_comunas(&sociedad);
+    }
+
+    // presenta los resultados de los dias simulados
+    mostrar_resumen(&sociedad);
+
+    mostrar_exito("La simulacion ha terminado.");
+
+    liberar_sociedad(&sociedad);
+
+    return 0;
+}
+
+==> ./consumo.c <==
+
+#include <stdio.h>
+#include <stdlib.h>
+#include "consumo.h"
+#include "emergencias.h"
+
+// reduce una cantidad aleatoria de una existencia
+static void consumir_existencias(struct Existencia *existencias) {
+    struct Existencia *actual = existencias;
+
+    while (actual != NULL) {
+        int consumo = (rand() % 5) + 1;
+
+        if (actual->cantidad < consumo) {
+            actual->cantidad = 0;
+        } else {
+            actual->cantidad -= consumo;
+        }
+
+        actual = actual->siguiente;
+    }
+}
+
+// aplica el consumo de un dia a todas las comunas
+void aplicar_consumo_diario(struct Sociedad *sociedad) {
+    struct Comuna *comuna = sociedad->comunas;
+
+    // recorre todas las comunas
+    while (comuna != NULL) {
+        consumir_existencias(comuna->bienes);
+        consumir_existencias(comuna->servicios);
+
+        // la penalizacion de las emergencias se recupera de a poco
+        if (comuna->penalizacionEmergencia > 0) {
+            comuna->penalizacionEmergencia -= 2;
+
+            if (comuna->penalizacionEmergencia < 0) {
+                comuna->penalizacionEmergencia = 0;
+            }
+        }
+
+        // actualiza la necesidad y satisfaccion
+        calcular_indices_comuna(comuna);
+
+        comuna = comuna->siguiente;
+    }
+
+    // avanza al siguiente dia
+    sociedad->dia++;
+
+    // cuenta los dias que faltan para la proxima emergencia
+    sociedad->diasParaEmergencia--;
+
+    if (sociedad->diasParaEmergencia <= 0) {
+        generar_emergencia(sociedad);
+
+        // la proxima emergencia sale entre 3 y 7 dias despues
+        sociedad->diasParaEmergencia = (rand() % 5) + 3;
+    }
+}
+
+==> ./archivos.h <==
+#ifndef ARCHIVOS_H
+#define ARCHIVOS_H
+
+#include <stdbool.h>
+#include <stddef.h>
+
+// funcion que se ejecuta por cada archivo .txt encontrado
+// recibe el nombre del archivo, su ruta y un contexto
+typedef void (*CallbackArchivoTxt)(const char *nombre_archivo,
+                                   const char *ruta_completa,
+                                   void *contexto);
+
+// recorre una carpeta y sus subcarpetas buscando archivos .txt
+// ejecuta el callback por cada archivo encontrado
+// retorna la cantidad de archivos encontrados o -1 si ocurre un error
+int archivos_recorrer_directorio(const char *ruta_directorio,
+                                 CallbackArchivoTxt callback,
+                                 void *contexto);
+
+// busca un texto dentro de un archivo leyendo linea por linea
+// permite ignorar las mayusculas y minusculas
+// retorna true si encuentra el texto o false si no lo encuentra
+bool archivos_contiene_texto(const char *ruta_archivo,
+                           const char *texto_buscado,
+                           bool ignorar_mayusculas);
+
+// muestra las primeras lineas de un archivo
+// retorna true si pudo leerlo o false si ocurre un error
+bool archivos_mostrar_fragmento(const char *ruta_archivo, size_t max_lineas);
+
+#endif /* ARCHIVOS_H */
+==> ./biblioteca.c <==
+#define _POSIX_C_SOURCE 200809L
+#include "biblioteca.h"
+#include "archivos.h"
+
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// datos necesarios para buscar texto en los archivos
+typedef struct ContextoBusquedaDisco {
+    const char *texto_normalizado;
+    ListaArchivos *resultados;
+    size_t archivos_revisados;
+} ContextoBusquedaDisco;
+
+// datos necesarios para mostrar el catalogo
+typedef struct ContextoListado {
+    size_t contador;
+    size_t limite;
+} ContextoListado;
+
+// agrega los libros encontrados al arbol AVL
+static void callback_indexar_avl(const char *nombre_archivo,
+                                 const char *ruta_completa,
+                                 void *contexto) {
+    ArbolAVL *avl = (ArbolAVL *)contexto;
+    avl_insertar(avl, nombre_archivo, ruta_completa);
+}
+
+// busca el texto dentro de un libro
+// si lo encuentra, agrega el nombre a la lista de resultados
+static void callback_buscar_en_libro(const NodoAVL *nodo, void *contexto) {
+    ContextoBusquedaDisco *ctx = (ContextoBusquedaDisco *)contexto;
+    ctx->archivos_revisados++;
+
+    if (archivos_contiene_texto(nodo->ruta_completa, ctx->texto_normalizado, true)) {
+        lista_archivos_agregar(ctx->resultados, nodo->nombre_archivo);
+    }
+}
+
+// muestra un libro del catalogo
+static void callback_imprimir_catalogo(const NodoAVL *nodo, void *contexto) {
+    ContextoListado *ctx = (ContextoListado *)contexto;
+    if (ctx->limite > 0 && ctx->contador >= ctx->limite) {
+        return;
+    }
+    ctx->contador++;
+    printf("  %zu. %s  (%s)\n", ctx->contador, nodo->nombre_archivo, nodo->ruta_completa);
+}
+
+// convierte un texto a minusculas
+// quien use esta funcion debe liberar la memoria despues
+static char *duplicar_minusculas(const char *texto) {
+    if (!texto) return NULL;
+    size_t len = strlen(texto);
+    char *copia = (char *)malloc(len + 1);
+    if (!copia) return NULL;
+
+    for (size_t i = 0; i < len; i++) {
+        copia[i] = (char)tolower((unsigned char)texto[i]);
+    }
+    copia[len] = '\0';
+    return copia;
+}
+
+// muestra los nombres de los libros encontrados
+static void imprimir_lista_resultados(const ListaArchivos *lista, const char *termino) {
+    printf("\nResultados para \"%s\" (%zu libro(s) encontrado(s)):\n",
+           termino, lista->cantidad);
+
+    if (lista->cantidad == 0) {
+        printf("  (Ningun libro contiene el texto buscado)\n");
+        return;
+    }
+
+    const NodoArchivo *actual = lista->cabeza;
+    size_t idx = 1;
+    while (actual != NULL) {
+        printf("  [%zu] %s\n", idx++, actual->nombre_archivo);
+        actual = actual->siguiente;
+    }
+}
+
+// crea el indice AVL recorriendo la carpeta del corpus
+ArbolAVL *biblioteca_construir_indice_avl(const char *ruta_corpus) {
+    if (!ruta_corpus) return NULL;
+
+    ArbolAVL *avl = avl_crear();
+    if (!avl) return NULL;
+
+    int total = archivos_recorrer_directorio(ruta_corpus, callback_indexar_avl, avl);
+    if (total < 0) {
+        avl_destruir(avl);
+        return NULL;
+    }
+
+    return avl;
+}
+
+// crea una biblioteca y construye su propio indice AVL
+Biblioteca *biblioteca_crear(const char *nombre_comuna, const char *ruta_corpus) {
+    if (!ruta_corpus) return NULL;
+
+    ArbolAVL *avl = biblioteca_construir_indice_avl(ruta_corpus);
+    if (!avl) return NULL;
+
+    Biblioteca *bib = biblioteca_crear_con_indice(nombre_comuna, avl);
+    if (!bib) {
+        avl_destruir(avl);
+        return NULL;
+    }
+
+    bib->es_duena_indice = true;
+    return bib;
+}
+
+// crea una biblioteca usando un indice AVL existente
+Biblioteca *biblioteca_crear_con_indice(const char *nombre_comuna, ArbolAVL *indice_compartido) {
+    if (!indice_compartido) return NULL;
+
+    Biblioteca *bib = (Biblioteca *)malloc(sizeof(Biblioteca));
+    if (!bib) return NULL;
+
+    bib->nombre_comuna = strdup(nombre_comuna ? nombre_comuna : "Comuna Sin Nombre");
+    bib->cache_textos = splay_crear();
+
+    if (!bib->nombre_comuna || !bib->cache_textos) {
+        free(bib->nombre_comuna);
+        splay_destruir(bib->cache_textos);
+        free(bib);
+        return NULL;
+    }
+
+    bib->indice_libros = indice_compartido;
+    bib->es_duena_indice = false;
+    bib->cache_hits = 0;
+    bib->cache_misses = 0;
+    return bib;
+}
+
+// busca un libro por su nombre exacto
+// si lo encuentra, muestra su ruta y un fragmento si se solicita
+bool biblioteca_buscar_libro(const Biblioteca *bib,
+                             const char *nombre_archivo,
+                             size_t lineas_preview) {
+    if (!bib || !bib->indice_libros || !nombre_archivo) return false;
+
+    const NodoAVL *encontrado = avl_buscar_exacto(bib->indice_libros, nombre_archivo);
+    if (!encontrado) {
+        printf("[AVL - %s] El libro \"%s\" no existe en la biblioteca.\n",
+               bib->nombre_comuna, nombre_archivo);
+        return false;
+    }
+
+    printf("[AVL - %s] Libro encontrado: \"%s\" -> Ruta: %s\n",
+           bib->nombre_comuna, encontrado->nombre_archivo, encontrado->ruta_completa);
+
+    if (lineas_preview > 0) {
+        archivos_mostrar_fragmento(encontrado->ruta_completa, lineas_preview);
+    }
+
+    return true;
+}
+
+// busca un texto dentro de los libros
+// primero revisa si el resultado ya esta guardado en cache
+// si no esta, busca en los archivos y guarda el resultado
+int biblioteca_buscar_texto(Biblioteca *bib,
+                            const char *texto_buscado,
+                            bool mostrar_traza_splay) {
+    if (!bib || !bib->cache_textos || !bib->indice_libros ||
+        !texto_buscado || texto_buscado[0] == '\0') {
+        return -1;
+    }
+
+    char *termino_norm = duplicar_minusculas(texto_buscado);
+    if (!termino_norm) return -1;
+
+    printf("\n--- Busqueda de texto en Biblioteca (%s): \"%s\" ---\n",
+           bib->nombre_comuna, termino_norm);
+
+    // revisa primero si el texto esta en el arbol chaflaneado
+    NodoSplay *en_cache = splay_buscar(bib->cache_textos, termino_norm, mostrar_traza_splay);
+    if (en_cache != NULL) {
+        bib->cache_hits++;
+        printf("[CACHE HIT] Resultado recuperado desde el Arbol Chaflaneado (accesos: %zu).\n",
+               en_cache->accesos);
+        imprimir_lista_resultados(&en_cache->resultados, termino_norm);
+        int total = (int)en_cache->resultados.cantidad;
+        free(termino_norm);
+        return total;
+    }
+
+    // si no esta en cache, busca en los libros del disco
+    bib->cache_misses++;
+    printf("[CACHE MISS] Buscando \"%s\" en %zu libros en disco...\n",
+           termino_norm, bib->indice_libros->total_nodos);
+
+    ListaArchivos encontrados;
+    lista_archivos_inicializar(&encontrados);
+
+    ContextoBusquedaDisco ctx = {
+        .texto_normalizado = termino_norm,
+        .resultados = &encontrados,
+        .archivos_revisados = 0
+    };
+
+    avl_recorrer_inorder(bib->indice_libros, callback_buscar_en_libro, &ctx);
+
+    int total_hallados = (int)encontrados.cantidad;
+    imprimir_lista_resultados(&encontrados, termino_norm);
+
+    // guarda el resultado en el arbol chaflaneado
+    splay_insertar(bib->cache_textos, termino_norm, &encontrados, mostrar_traza_splay);
+
+    free(termino_norm);
+    return total_hallados;
+}
+
+// muestra el estado de la cache y sus estadisticas
+void biblioteca_mostrar_estado_cache(const Biblioteca *bib) {
+    if (!bib) return;
+    printf("\nBiblioteca: %s | Libros indexados (AVL): %zu (altura: %d) | Hits: %zu | Misses: %zu\n",
+           bib->nombre_comuna,
+           bib->indice_libros ? bib->indice_libros->total_nodos : 0,
+           avl_obtener_altura(bib->indice_libros),
+           bib->cache_hits,
+           bib->cache_misses);
+    splay_imprimir_arbol(bib->cache_textos);
+}
+
+// muestra el catalogo de libros en orden alfabetico
+void biblioteca_listar_catalogo(const Biblioteca *bib, size_t limite_impresion) {
+    if (!bib || !bib->indice_libros) return;
+    printf("\n=== Catalogo de Libros en %s (Total: %zu) ===\n",
+           bib->nombre_comuna, bib->indice_libros->total_nodos);
+
+    ContextoListado ctx = { .contador = 0, .limite = limite_impresion };
+    avl_recorrer_inorder(bib->indice_libros, callback_imprimir_catalogo, &ctx);
+
+    if (limite_impresion > 0 && bib->indice_libros->total_nodos > limite_impresion) {
+        printf("  ... (%zu libros adicionales omitidos)\n",
+               bib->indice_libros->total_nodos - limite_impresion);
+    }
+}
+
+//busca y devuelve el resultado
+const char *biblioteca_obtener_resultado_texto(const Biblioteca *bib, size_t indice) {
+    if (!bib || !bib->cache_textos || !bib->cache_textos->raiz) {
+        return NULL;
+    }
+
+    const ListaArchivos *lista = &bib->cache_textos->raiz->resultados;
+    if (indice >= lista->cantidad) {
+        return NULL;
+    }
+
+    const NodoArchivo *actual = lista->cabeza;
+    for (size_t i = 0; i < indice && actual != NULL; i++) {
+        actual = actual->siguiente;
+    }
+
+    return actual ? actual->nombre_archivo : NULL;
+}
+
+// libera la memoria de la biblioteca y sus estructuras
+void biblioteca_destruir(Biblioteca *bib) {
+    if (!bib) return;
+    free(bib->nombre_comuna);
+    splay_destruir(bib->cache_textos);
+    if (bib->es_duena_indice && bib->indice_libros) {
+        avl_destruir(bib->indice_libros);
+    }
+    free(bib);
+}
+==> ./archivos.c <==
+#define _POSIX_C_SOURCE 200809L
+#include "archivos.h"
+
+#include <ctype.h>
+#include <dirent.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+
+#define BUFFER_LINEA 4096
+#define MAX_RUTA 1024
+
+// verifica si el archivo termina en .txt
+static bool es_archivo_txt(const char *nombre) {
+    if (!nombre) return false;
+    size_t len = strlen(nombre);
+    if (len < 4) return false;
+
+    const char *ext = nombre + (len - 4);
+    return (tolower((unsigned char)ext[0]) == '.' &&
+            tolower((unsigned char)ext[1]) == 't' &&
+            tolower((unsigned char)ext[2]) == 'x' &&
+            tolower((unsigned char)ext[3]) == 't');
+}
+
+// busca un texto dentro de otro ignorando mayusculas y minusculas
+static const char *strstr_insensible(const char *pajar, const char *aguja) {
+    if (!*aguja) return pajar;
+
+    for (; *pajar; pajar++) {
+        if (tolower((unsigned char)*pajar) == tolower((unsigned char)*aguja)) {
+            const char *h = pajar + 1;
+            const char *n = aguja + 1;
+            while (*h && *n &&
+                   tolower((unsigned char)*h) == tolower((unsigned char)*n)) {
+                h++;
+                n++;
+            }
+            if (!*n) return pajar;
+        }
+    }
+    return NULL;
+}
+
+int archivos_recorrer_directorio(const char *ruta_directorio,
+                                 CallbackArchivoTxt callback,
+                                 void *contexto) {
+    if (!ruta_directorio || !callback) return -1;
+
+    DIR *dir = opendir(ruta_directorio);
+    if (!dir) {
+        perror("Error al abrir directorio de biblioteca");
+        return -1;
+    }
+
+    int total_encontrados = 0;
+    struct dirent *entrada;
+    char ruta_completa[MAX_RUTA];
+
+    while ((entrada = readdir(dir)) != NULL) {
+        // ignora la carpeta actual y la carpeta anterior
+        if (strcmp(entrada->d_name, ".") == 0 ||
+            strcmp(entrada->d_name, "..") == 0) {
+            continue;
+        }
+
+        // construye la ruta completa del archivo o carpeta
+        size_t len_dir = strlen(ruta_directorio);
+        int escritos;
+        if (len_dir > 0 && ruta_directorio[len_dir - 1] == '/') {
+            escritos = snprintf(ruta_completa, sizeof(ruta_completa), "%s%s",
+                                ruta_directorio, entrada->d_name);
+        } else {
+            escritos = snprintf(ruta_completa, sizeof(ruta_completa), "%s/%s",
+                                ruta_directorio, entrada->d_name);
+        }
+
+        // verifica que la ruta no supere el tamaño del buffer
+        if (escritos < 0 || (size_t)escritos >= sizeof(ruta_completa)) {
+            fprintf(stderr, "Advertencia: ruta demasiado larga omitida: %s/%s\n",
+                    ruta_directorio, entrada->d_name);
+            continue;
+        }
+
+        struct stat info;
+        if (stat(ruta_completa, &info) != 0) {
+            continue;
+        }
+
+        // si encuentra una carpeta, la recorre tambien
+        if (S_ISDIR(info.st_mode)) {
+            int sub_total = archivos_recorrer_directorio(ruta_completa, callback, contexto);
+            if (sub_total > 0) {
+                total_encontrados += sub_total;
+            }
+        // si es un archivo .txt, ejecuta el callback
+        } else if (S_ISREG(info.st_mode) && es_archivo_txt(entrada->d_name)) {
+            callback(entrada->d_name, ruta_completa, contexto);
+            total_encontrados++;
+        }
+    }
+
+    closedir(dir);
+    return total_encontrados;
+}
+
+bool archivos_contiene_texto(const char *ruta_archivo,
+                           const char *texto_buscado,
+                           bool ignorar_mayusculas) {
+    if (!ruta_archivo || !texto_buscado || texto_buscado[0] == '\0') {
+        return false;
+    }
+
+    FILE *archivo = fopen(ruta_archivo, "r");
+    if (!archivo) {
+        return false;
+    }
+
+    char linea[BUFFER_LINEA];
+    bool encontrado = false;
+
+    // lee el archivo linea por linea hasta encontrar el texto
+    while (fgets(linea, sizeof(linea), archivo) != NULL) {
+        const char *match = ignorar_mayusculas
+                                ? strstr_insensible(linea, texto_buscado)
+                                : strstr(linea, texto_buscado);
+        if (match != NULL) {
+            encontrado = true;
+            break; // ya encontro el texto, no necesita seguir leyendo
+        }
+    }
+
+    fclose(archivo);
+    return encontrado;
+}
+
+bool archivos_mostrar_fragmento(const char *ruta_archivo, size_t max_lineas) {
+    if (!ruta_archivo || max_lineas == 0) return false;
+
+    FILE *archivo = fopen(ruta_archivo, "r");
+    if (!archivo) {
+        perror("No se pudo abrir el libro");
+        return false;
+    }
+
+    char linea[BUFFER_LINEA];
+    size_t contador = 0;
+
+    // muestra las primeras lineas del archivo
+    printf("\n--- Inicio de extracto (%s) ---\n", ruta_archivo);
+    while (contador < max_lineas && fgets(linea, sizeof(linea), archivo) != NULL) {
+        printf("%s", linea);
+        contador++;
+    }
+    printf("\n--- Fin de extracto ---\n");
+
+    fclose(archivo);
+    return true;
+}
+==> ./README.md <==
+# Sociedad Solarpunk
+
+Proyecto desarrollado por estudiantes de primer año de la **Escuela de Ingeniería en Computación del Tecnológico de Costa Rica**, durante el II semestre del año 2026, para el curso de Estructuras de Datos.
+
+## Autores
+
+- **Gabriel Montero Garro**
+- **Esteban Solano Orozco**
+
+**Profesor:** Aurelio Sanabria Rodríguez
+
+## Descripción del proyecto
+
+Sociedad Solarpunk es un proyecto desarrollado en lenguaje C que simula el funcionamiento de una sociedad formada por diferentes comunas. Cada comuna cuenta con una población y existencias de bienes y servicios que pueden variar a lo largo de la simulación.
+
+El programa permite administrar las existencias de las comunas, realizar trueques de bienes y servicios entre ellas y simular el consumo diario de los recursos disponibles. Además, contempla la generación de emergencias que provocan pérdidas de bienes y servicios y afectan el bienestar de la comuna donde ocurren y de algunas comunas cercanas.
+
+Durante la simulación se actualizan los índices de necesidad y satisfacción de las comunas, lo que permite observar cómo cambian sus condiciones a lo largo del tiempo. Al finalizar, se presenta un resumen del estado de la sociedad.
+
+El proyecto permite poner en práctica conceptos de programación en C, estructuras de datos, manejo de memoria y organización del código en diferentes archivos.
+
+## Tecnologías utilizadas
+
+- Lenguaje de programación C.
+- Biblioteca estándar de C.
+- Estructuras de datos dinámicas.
+- Archivos para cargar los datos iniciales de la sociedad.
+- Terminal para compilar y ejecutar el programa.
+
+## Requisitos
+
+Para compilar y ejecutar el proyecto se necesita:
+
+- Un compilador de C, como GCC.
+- Una terminal compatible con los comandos de compilación.
+- Los archivos del proyecto y los datos iniciales incluidos en el repositorio.
+
+## Instalación y ejecución
+
+### 1. Clonar el repositorio
+
+```bash
+git clone https://github.com/gmgarro/sociedad_solarpunk.git
+```
+
+### 2. Entrar en la carpeta del proyecto
+
+```bash
+cd sociedad_solarpunk
+```
+
+### 3. Compilar el programa
+
+Desde la carpeta principal del proyecto, ejecutar:
+
+```bash
+gcc -Wall -Wextra -std=c11 main.c listas.c archivos.c sociedad.c consumo.c emergencias.c economia.c -o programa
+```
+
+### 4. Ejecutar el programa
+
+```bash
+./programa
+```
+
+**Importante:** los archivos y las carpetas con los datos iniciales deben conservar sus rutas para que el programa pueda cargar correctamente la información de la sociedad.
+
+## Repositorio
+
+El código fuente y los archivos del proyecto se encuentran disponibles en GitHub:
+
+[https://github.com/gmgarro/sociedad_solarpunk.git](https://github.com/gmgarro/sociedad_solarpunk.git)
+
+## Propósito académico
+
+Este proyecto fue realizado como parte del curso de Estructuras de Datos, impartido por el profesor **Aurelio Sanabria Rodríguez**, en la Escuela de Ingeniería en Computación del Tecnológico de Costa Rica, durante el II semestre de 2026.
+
+Su desarrollo tiene como propósito aplicar los conocimientos adquiridos durante el curso mediante la implementación de una simulación de una sociedad, utilizando el lenguaje C y estructuras de datos.
+
+---
+
+**Tecnológico de Costa Rica**  
+**Escuela de Ingeniería en Computación**  
+**II semestre, 2026**
+
+==> ./emergencias.c <==
+
+#include <stdio.h>
+#include <stdlib.h>
+#include "emergencias.h"
+#include "sociedad.h"
+
+// colores para mostrar los mensajes
+#define ROJO "\033[31m"
+#define AMARILLO "\033[33m"
+#define CIAN "\033[36m"
+#define VERDE "\033[32m"
+#define NEGRITA "\033[1m"
+#define RESET "\033[0m"
+
+// quita el 25 % de la cantidad de cada bien o servicio de una lista
+static void perder_cuarto(struct Existencia *lista) {
+    struct Existencia *actual = lista;
+    int reduccion;
+    int huboPerdidas = 0;
+
+    while (actual != NULL) {
+        reduccion = actual->cantidad / 4;
+
+        // solo muestra lo que de verdad se perdio
+        if (reduccion > 0) {
+            actual->cantidad -= reduccion;
+
+            printf("  - %-30s " ROJO "-%d unidades\n" RESET,
+                   actual->nombre, reduccion);
+
+            huboPerdidas = 1;
+        }
+
+        actual = actual->siguiente;
+    }
+
+    if (!huboPerdidas) {
+        printf("  " VERDE "No hubo perdidas en esta categoria.\n" RESET);
+    }
+}
+
+// genera una emergencia en una comuna aleatoria
+void generar_emergencia(struct Sociedad *sociedad) {
+    struct Comuna *comuna;
+    struct Comuna *afectada;
+    int cantidadComunas = 0;
+    int posicion;
+    int i;
+
+    if (sociedad == NULL) {
+        return;
+    }
+
+    comuna = sociedad->comunas;
+
+    // cuenta las comunas disponibles
+    while (comuna != NULL) {
+        cantidadComunas++;
+        comuna = comuna->siguiente;
+    }
+
+    // revisa si hay comunas disponibles
+    if (cantidadComunas == 0) {
+        return;
+    }
+
+    // selecciona una comuna al azar
+    posicion = rand() % cantidadComunas;
+    afectada = sociedad->comunas;
+
+    for (i = 0; i < posicion; i++) {
+        afectada = afectada->siguiente;
+    }
+
+    // muestra el aviso principal de la emergencia
+    printf("\n");
+    printf(AMARILLO NEGRITA);
+    printf("==================================================\n");
+    printf("                 ALERTA DEL SISTEMA\n");
+    printf("==================================================\n");
+    printf(RESET);
+
+    printf(ROJO NEGRITA);
+    printf("\n  ¡EMERGENCIA EN LA COMUNA %s!\n", afectada->nombre);
+    printf(RESET);
+
+    printf("\nSe ha registrado una emergencia que afecta a esta comuna.\n");
+    printf("Se aplicaran perdidas en sus bienes y servicios.\n");
+
+    // muestra las perdidas de bienes
+    printf("\n" CIAN NEGRITA "  PERDIDAS DE BIENES\n" RESET);
+    printf("  ------------------------------------------------\n");
+    perder_cuarto(afectada->bienes);
+
+    // muestra las perdidas de servicios
+    printf("\n" CIAN NEGRITA "  PERDIDAS DE SERVICIOS\n" RESET);
+    printf("  ------------------------------------------------\n");
+    perder_cuarto(afectada->servicios);
+
+    // la satisfaccion de la comuna afectada baja directo
+    afectada->penalizacionEmergencia += 20;
+
+    // actualiza la necesidad y satisfaccion de la comuna afectada
+    calcular_indices_comuna(afectada);
+
+    // reduce la satisfaccion de las comunas cercanas
+    afectar_comunas_cercanas(afectada);
+
+    printf("\n" AMARILLO NEGRITA);
+    printf("  La emergencia tambien puede afectar a las comunas cercanas.\n");
+    printf("==================================================\n");
+    printf(RESET);
+}
+
+// baja la satisfaccion de una comuna cercana (si existe)
+static void penalizar_cercana(struct Comuna *cercana) {
+    if (cercana == NULL) {
+        return;
+    }
+
+    cercana->penalizacionEmergencia += 10;
+
+    // actualiza la necesidad y satisfaccion
+    calcular_indices_comuna(cercana);
+
+    printf(AMARILLO "  [!] La comuna %s tambien fue afectada.\n" RESET,
+           cercana->nombre);
+}
+
+// las cercanas son la anterior, la siguiente y la siguiente de la siguiente
+void afectar_comunas_cercanas(struct Comuna *afectada) {
+    if (afectada == NULL) {
+        return;
+    }
+
+    penalizar_cercana(afectada->anterior);
+    penalizar_cercana(afectada->siguiente);
+
+    if (afectada->siguiente != NULL) {
+        penalizar_cercana(afectada->siguiente->siguiente);
+    }
+}

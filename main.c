@@ -197,6 +197,11 @@ int menu_trueque(struct Sociedad *sociedad) {
         origen = origen->siguiente;
     }
 
+    if (!origen->administrada) {
+      mostrar_error("Solo puedes iniciar trueques desde tus comunas administradas.");
+    return 1;
+}
+
     // vuelve a pedir la comuna si se selecciona la misma
     do {
         numero = pedir_opcion("Numero de la comuna que recibe: ",
@@ -351,6 +356,11 @@ void menu_regalo(struct Sociedad *sociedad) {
                           1, sociedad->poblacionTotal);
     da = buscar_persona(sociedad, numero);
 
+    if (!da->comunaActual->administrada) {
+        mostrar_error("Solo puedes gestionar regalos desde tus comunas administradas.");
+    return;
+}
+
     numero = pedir_opcion("Numero de la persona que recibe: ",
                           1, sociedad->poblacionTotal);
     recibe = buscar_persona(sociedad, numero);
@@ -387,6 +397,13 @@ void menu_lectura(struct Sociedad *sociedad) {
     numero = pedir_opcion("\nNumero de la persona que lee: ",
                           1, sociedad->poblacionTotal);
     p = buscar_persona(sociedad, numero);
+
+    // <--- CAMBIO 1: Validar que sea de una de tus 3 comunas administradas
+    if (!p->comunaActual->administrada) {
+        mostrar_error("Esa persona pertenece a una comuna autonoma (no administrada por ti).");
+        return;
+    }
+
     bib = p->comunaActual->biblioteca;
 
     printf("Texto a buscar: ");
@@ -402,10 +419,13 @@ void menu_lectura(struct Sociedad *sociedad) {
         return;
     }
 
-    cantidad = biblioteca_buscar_texto(bib, texto, false);
+    //Cambiar 'false' por 'true' para mostrar las rotaciones Splay en vivo
+    cantidad = biblioteca_buscar_texto(bib, texto, true);
 
+    // <--- CAMBIO 3: Si no hay resultados locales, encolar en la Red Interbibliotecaria (Extra 10%)
     if (cantidad <= 0) {
-        mostrar_error("No se encontraron libros con ese texto.");
+        mostrar_error("No se encontraron libros localmente. Encolando solicitud en la Red Interbibliotecaria...");
+        encolar_solicitud_biblioteca(sociedad, p->comunaActual, p->nombre, texto);
         return;
     }
 
@@ -465,6 +485,7 @@ void menu_lectura(struct Sociedad *sociedad) {
         mostrar_error("No pudo aprenderlo (quizas ya lo sabia).");
     }
 }
+
 
 // menu de la biblioteca de una comuna
 void menu_biblioteca(struct Sociedad *sociedad) {
@@ -672,6 +693,8 @@ int main(void) {
             }
         }
 
+        procesar_red_interbibliotecaria(&sociedad);
+        simular_comunas_autonomas(&sociedad);
         // aplica el consumo y actualiza los indices
         aplicar_consumo_diario(&sociedad);
         calcular_indices_sociedad(&sociedad);
