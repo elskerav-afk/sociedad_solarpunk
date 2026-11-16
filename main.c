@@ -317,7 +317,7 @@ void mostrar_resumen(struct Sociedad *sociedad) {
         printf("\n%s\n", comuna->nombre);
         printf("  Necesidad: %.2f\n", comuna->necesidad);
         printf("  Satisfaccion: %.2f\n", comuna->satisfaccion);
-
+		printf("  Tipo: %s\n", comuna->administrada ? "Administrada" : "Autonoma");
         if (comuna->satisfaccion >= 70) {
             printf(VERDE "  Estado: estable\n" RESET);
         } else if (comuna->satisfaccion >= 40) {
@@ -325,7 +325,7 @@ void mostrar_resumen(struct Sociedad *sociedad) {
         } else {
             printf(ROJO "  Estado: necesita ayuda\n" RESET);
         }
-
+        
         comuna = comuna->siguiente;
     }
 	if (sociedad->cantidadComunas < 3) {

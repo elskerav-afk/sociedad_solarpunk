@@ -200,6 +200,7 @@ int agregar_comuna(struct Sociedad *sociedad, const char *nombre) {
     nueva->satisfaccion = 0;
     nueva->penalizacionEmergencia = 0;
     nueva->reciprocidad = 100;
+    nueva->administrada = 0;
     nueva->anterior = NULL;
     nueva->siguiente = NULL;
     
@@ -639,6 +640,7 @@ int inicializar_sociedad(struct Sociedad *sociedad,
 
     while (comunaActual != NULL) {
         comunaActual->poblacion = poblacionBase;
+        comunaActual->administrada = (numeroComuna < 3);
 
         if (numeroComuna < personasExtra) {
             comunaActual->poblacion++;
@@ -755,6 +757,21 @@ int disolver_comuna(struct Sociedad *sociedad, struct Comuna *comuna) {
         }
         p = p->siguiente;
     }
+
+	// si era administrada, una autonoma ocupa su lugar
+	if (comuna->administrada) {
+		actual = sociedad->comunas;
+
+		while (actual != NULL) {
+			if (actual != comuna && actual->administrada == 0) {
+				actual->administrada = 1;
+				printf("La comuna %s pasa a ser administrada.\n",
+					actual->nombre);
+				break;
+			}
+			actual = actual->siguiente;
+		}
+}
 
     // saca la comuna de la lista
     if (comuna->anterior != NULL) {

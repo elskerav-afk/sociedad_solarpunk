@@ -59,6 +59,7 @@ struct Comuna {
     float necesidad;
     float satisfaccion;
     float reciprocidad;
+    int administrada;   // 1 = administrada (maximo 3), 0 = autonoma
     float penalizacionEmergencia;
 
     struct Comuna *anterior;
@@ -104,7 +105,7 @@ void calcular_reciprocidad_comuna(struct Sociedad *sociedad,
 // si la necesidad llega a este valor o mas, la comuna se disuelve
 #define UMBRAL_NECESIDAD 45.0f
 // si la satisfaccion baja a este valor o menos, la comuna se disuelve
-#define UMBRAL_SATISFACCION 50.0f
+#define UMBRAL_SATISFACCION 50S.0f
 // disuelve una comuna y muda a sus personas a otra (devuelve 0 si no pudo)
 int disolver_comuna(struct Sociedad *sociedad, struct Comuna *comuna);
 // disuelve las comunas con necesidad muy alta o satisfaccion muy baja
